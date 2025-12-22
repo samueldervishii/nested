@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - nested</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/images/nested-icon.svg">
+</head>
+<body>
+    <!-- Header Top Bar -->
+    <div class="header-top">
+        <a href="/">MY COMMUNITIES</a>
+        <a href="/">HOME</a>
+        <a href="/c/popular">POPULAR</a>
+        <a href="/c/all">ALL</a>
+    </div>
+
+    <!-- Main Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <img src="/images/nested-logo.svg" alt="nested">
+            </a>
+
+            <div class="header-right">
+                <div id="auth-area"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <main class="content">
+            <div class="form-container" style="max-width: 600px;">
+                <h2>Account Settings</h2>
+
+                <!-- Profile Section -->
+                <div class="settings-section" style="margin-bottom: 30px; padding: 15px; background: #f6f6f6; border-radius: 4px;">
+                    <h3 style="margin-bottom: 15px;">Profile</h3>
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label for="bio">Bio</label>
+                            <textarea id="bio" rows="4" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="avatarUrl">Avatar URL</label>
+                            <input type="url" id="avatarUrl" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        </div>
+                        <button type="submit" class="btn-primary">Update Profile</button>
+                    </form>
+                </div>
+
+                <!-- Password Section -->
+                <div class="settings-section" style="padding: 15px; background: #f6f6f6; border-radius: 4px;">
+                    <h3 style="margin-bottom: 15px;">Change Password</h3>
+                    <form id="password-form">
+                        <div class="form-group">
+                            <label for="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">New Password</label>
+                            <input type="password" id="newPassword" required minlength="8" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        </div>
+                        <button type="submit" class="btn-primary">Change Password</button>
+                    </form>
+                </div>
+
+                <div id="settings-message" style="margin-top: 15px;"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await api.getCurrentUser();
+            if (!user.authenticated) {
+                window.location.href = '/login';
+                return;
+            }
+
+            // Populate profile form
+            document.getElementById('bio').value = user.bio || '';
+            document.getElementById('avatarUrl').value = user.avatarUrl || '';
+
+            // Profile form handler
+            document.getElementById('profile-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const bio = document.getElementById('bio').value;
+                const avatarUrl = document.getElementById('avatarUrl').value;
+
+                try {
+                    await api.updateProfile({ bio, avatarUrl });
+                    showMessage('Profile updated successfully!', 'success');
+                } catch (error) {
+                    showMessage('Failed to update profile: ' + error.message, 'error');
+                }
+            });
+
+            // Password form handler
+            document.getElementById('password-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const currentPassword = document.getElementById('currentPassword').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                if (newPassword !== confirmPassword) {
+                    showMessage('New passwords do not match', 'error');
+                    return;
+                }
+
+                try {
+                    await api.changePassword(currentPassword, newPassword);
+                    showMessage('Password changed successfully!', 'success');
+                    document.getElementById('password-form').reset();
+                } catch (error) {
+                    showMessage('Failed to change password: ' + error.message, 'error');
+                }
+            });
+        });
+
+        function showMessage(text, type) {
+            const msgDiv = document.getElementById('settings-message');
+            msgDiv.innerHTML = `<p style="color: ${type === 'error' ? 'red' : 'green'}; padding: 10px; background: ${type === 'error' ? '#ffeeee' : '#eeffee'}; border-radius: 4px;">${text}</p>`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Community - nested</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/images/nested-icon.svg">
+</head>
+<body>
+    <div class="header-top">
+        <a href="/">MY COMMUNITIES</a>
+        <a href="/">HOME</a>
+    </div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <img src="/images/nested-logo.svg" alt="nested">
+            </a>
+            <div class="header-right">
+                <div id="auth-area"></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="auth-container" style="max-width: 600px;">
+        <div class="auth-box">
+            <h1>Create a Community</h1>
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+
+            <form id="create-form">
+                <div class="form-group">
+                    <label for="name">Community name</label>
+                    <input type="text" id="name" name="name" required minlength="3" maxlength="21"
+                           pattern="[a-zA-Z0-9_]+"
+                           title="Only letters, numbers, and underscores allowed"
+                           placeholder="e.g. programming, gaming, news">
+                    <small style="color: #888; font-size: 11px; margin-top: 5px; display: block;">
+                        Community names cannot be changed after creation.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4"
+                              style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;"
+                              maxlength="500"
+                              placeholder="What is this community about?"></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary">Create Community</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        api.getCurrentUser().then(user => {
+            if (!user.authenticated) {
+                window.location.href = '/login';
+            } else {
+                document.getElementById('auth-area').innerHTML = `
+                    <span class="user-info">${user.username}</span>
+                    <a href="#" onclick="api.logout(); return false;">logout</a>
+                `;
+            }
+        });
+
+        document.getElementById('create-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                name: document.getElementById('name').value,
+                description: document.getElementById('description').value
+            };
+
+            try {
+                const subnested = await api.createSubnested(data);
+                window.location.href = `/r/${subnested.name}`;
+            } catch (error) {
+                document.getElementById('error-message').textContent = error.message || 'Failed to create community';
+                document.getElementById('error-message').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

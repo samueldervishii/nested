@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit - nested</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/images/nested-icon.svg">
+    <style>
+        .submit-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .submit-box {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .submit-tabs {
+            display: flex;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 25px;
+        }
+        .submit-tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            color: #888;
+            font-weight: bold;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        .submit-tab:hover {
+            color: #336699;
+        }
+        .submit-tab.active {
+            color: #ff6b35;
+            border-bottom-color: #ff6b35;
+        }
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: inherit;
+            resize: vertical;
+            font-size: 14px;
+        }
+        .form-group textarea:focus {
+            border-color: #5f99cf;
+            outline: none;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="header-top">
+        <a href="/">MY COMMUNITIES</a>
+        <a href="/">HOME</a>
+    </div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <img src="/images/nested-logo.svg" alt="nested">
+            </a>
+            <div class="header-right">
+                <div id="auth-area"></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="submit-container">
+        <div class="submit-box">
+            <h1 style="margin-bottom: 20px; color: #1a1a1b;">Create a Post</h1>
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+
+            <div class="submit-tabs">
+                <div class="submit-tab active" data-tab="link">Link</div>
+                <div class="submit-tab" data-tab="text">Text</div>
+            </div>
+
+            <form id="submit-form">
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" required maxlength="300" placeholder="An interesting title">
+                </div>
+
+                <div id="link-tab" class="tab-content active">
+                    <div class="form-group">
+                        <label for="url">URL</label>
+                        <input type="url" id="url" name="url" placeholder="https://example.com">
+                    </div>
+                </div>
+
+                <div id="text-tab" class="tab-content">
+                    <div class="form-group">
+                        <label for="content">Text (optional)</label>
+                        <textarea id="content" name="content" rows="6" placeholder="What's on your mind?"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="subnested">Community</label>
+                    <input type="text" id="subnested" name="subnested" required placeholder="e.g. programming, gaming, news">
+                </div>
+
+                <div class="form-group">
+                    <label style="display: inline; margin-right: 20px;">
+                        <input type="checkbox" id="nsfw" name="nsfw"> NSFW
+                    </label>
+                    <label style="display: inline;">
+                        <input type="checkbox" id="spoiler" name="spoiler"> Spoiler
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-primary" style="width: auto; padding: 12px 30px;">Post</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        let currentType = 'LINK';
+        document.querySelectorAll('.submit-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.submit-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+                currentType = tab.dataset.tab === 'text' ? 'TEXT' : 'LINK';
+            });
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('type') === 'text') {
+            document.querySelector('[data-tab="text"]').click();
+        }
+
+        api.getCurrentUser().then(user => {
+            if (!user.authenticated) {
+                window.location.href = '/login';
+            } else {
+                document.getElementById('auth-area').innerHTML = `
+                    <span class="user-info">${user.username}</span>
+                    <a href="#" onclick="api.logout(); return false;">logout</a>
+                `;
+            }
+        });
+
+        document.getElementById('submit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                title: document.getElementById('title').value,
+                subnestedName: document.getElementById('subnested').value,
+                postType: currentType,
+                nsfw: document.getElementById('nsfw').checked,
+                spoiler: document.getElementById('spoiler').checked
+            };
+
+            if (currentType === 'LINK') {
+                data.url = document.getElementById('url').value;
+            } else {
+                data.content = document.getElementById('content').value;
+            }
+
+            try {
+                const post = await api.createPost(data);
+                const subnestedName = post.subnestedName || post.subnestedName;
+                window.location.href = `/r/${subnestedName}/comments/${post.id}`;
+            } catch (error) {
+                document.getElementById('error-message').textContent = error.message || 'Failed to submit';
+                document.getElementById('error-message').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
