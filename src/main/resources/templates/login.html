@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log in - nested</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/images/nested-icon.svg">
+</head>
+<body>
+    <div class="header-top">
+        <a href="/">HOME</a>
+    </div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <img src="/images/nested-logo.svg" alt="nested">
+            </a>
+        </div>
+    </header>
+
+    <div class="auth-container">
+        <div class="auth-box">
+            <h1>Log in</h1>
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+
+                <button type="submit" class="btn-primary">Log In</button>
+            </form>
+
+            <div class="auth-footer">
+                New to nested? <a href="/register">Sign up</a>
+                <br><br>
+                <a href="/forgot-password">Forgot your password?</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                await api.login(username, password);
+                // Cookie is set automatically by the server (HttpOnly)
+                window.location.href = '/';
+            } catch (error) {
+                document.getElementById('error-message').textContent = error.message || 'Login failed';
+                document.getElementById('error-message').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Community - nested</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/images/nested-icon.svg">
+</head>
+<body>
+    <div class="header-top">
+        <a href="/">MY COMMUNITIES</a>
+        <a href="/">HOME</a>
+        <a href="/c/popular">POPULAR</a>
+        <a href="/c/all">ALL</a>
+    </div>
+
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <img src="/images/nested-logo.svg" alt="nested">
+            </a>
+
+            <nav class="nav-tabs" id="sort-tabs">
+                <a href="?sort=hot" class="nav-tab active" data-sort="hot">hot</a>
+                <a href="?sort=new" class="nav-tab" data-sort="new">new</a>
+                <a href="?sort=rising" class="nav-tab" data-sort="rising">rising</a>
+                <a href="?sort=controversial" class="nav-tab" data-sort="controversial">controversial</a>
+                <a href="?sort=top" class="nav-tab" data-sort="top">top</a>
+            </nav>
+
+            <div class="header-right">
+                <div id="auth-area"></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="subnested-banner" id="subnested-banner">
+        <h1 id="subnested-name">Loading...</h1>
+        <p id="subnested-description"></p>
+        <button class="subscribe-btn" id="subscribe-btn" style="display: none;">Join</button>
+    </div>
+
+    <div class="container">
+        <main class="content">
+            <div class="post-list" id="post-list">
+                <div class="loading">Loading posts...</div>
+            </div>
+        </main>
+
+        <aside class="sidebar">
+            <div class="sidebar-box">
+                <div class="sidebar-box-content search-box">
+                    <input type="text" placeholder="search" id="search-input">
+                </div>
+            </div>
+
+            <div class="sidebar-box">
+                <div class="sidebar-box-content">
+                    <a href="/submit" class="submit-btn" id="submit-link-btn">Submit a new link</a>
+                    <a href="/submit?type=text" class="submit-btn secondary" id="submit-text-btn">Submit a new text post</a>
+                </div>
+            </div>
+
+            <div class="sidebar-box" id="subnested-info-box">
+                <div class="sidebar-box-header" id="sidebar-subnested-name">About Community</div>
+                <div class="sidebar-box-content subnested-info">
+                    <p id="sidebar-description"></p>
+                    <div class="subnested-stats">
+                        <strong id="subscriber-count">0</strong>
+                        <span>members</span>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 11px; color: #888;">
+                        Created <span id="created-date"></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Moderator Tools - Only visible to moderators -->
+            <div class="sidebar-box" id="mod-tools-box" style="display: none;">
+                <div class="sidebar-box-header">Moderator Tools</div>
+                <div class="sidebar-box-content">
+                    <a href="#" class="submit-btn secondary" id="edit-community-btn" onclick="openEditModal(); return false;">Edit Community</a>
+                    <a href="#" class="submit-btn secondary" id="manage-flairs-btn" onclick="openFlairsModal(); return false;" style="margin-top: 8px;">Manage Flairs</a>
+                    <a href="#" class="submit-btn secondary" id="manage-rules-btn" onclick="openRulesModal(); return false;" style="margin-top: 8px;">Edit Rules</a>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Edit Community Modal -->
+    <div id="edit-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeEditModal()">&times;</span>
+            <h2>Edit Community</h2>
+            <form id="edit-community-form">
+                <div class="form-group">
+                    <label for="edit-description">Description</label>
+                    <textarea id="edit-description" rows="4" style="width: 100%;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit-banner">Banner URL</label>
+                    <input type="text" id="edit-banner" style="width: 100%;">
+                </div>
+                <div class="form-group">
+                    <label for="edit-icon">Icon URL</label>
+                    <input type="text" id="edit-icon" style="width: 100%;">
+                </div>
+                <button type="submit" class="btn-primary">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Manage Flairs Modal -->
+    <div id="flairs-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeFlairsModal()">&times;</span>
+            <h2>Manage Post Flairs</h2>
+            <div id="flairs-list"></div>
+            <hr style="margin: 15px 0;">
+            <h3>Add New Flair</h3>
+            <form id="add-flair-form">
+                <div class="form-group">
+                    <label for="flair-name">Flair Name</label>
+                    <input type="text" id="flair-name" required style="width: 100%;">
+                </div>
+                <div class="form-group">
+                    <label for="flair-color">Background Color</label>
+                    <input type="color" id="flair-color" value="#808080">
+                </div>
+                <button type="submit" class="btn-primary">Add Flair</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Rules Modal -->
+    <div id="rules-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeRulesModal()">&times;</span>
+            <h2>Edit Community Rules</h2>
+            <form id="edit-rules-form">
+                <div class="form-group">
+                    <label>Rules (one per line)</label>
+                    <textarea id="rules-textarea" rows="10" style="width: 100%;" placeholder="1. Be respectful&#10;2. No spam&#10;3. Stay on topic"></textarea>
+                </div>
+                <button type="submit" class="btn-primary">Save Rules</button>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-close {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+        }
+        .modal-close:hover {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .flair-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            background: #f5f5f5;
+        }
+        .flair-preview {
+            padding: 2px 8px;
+            border-radius: 3px;
+            color: white;
+            font-size: 12px;
+        }
+        .delete-flair-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+    </style>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/app.js"></script>
+    <script>
+        const subnestedName = window.location.pathname.split('/')[2];
+        let currentSubnested = null;
+
+        // Override loadSubnested to store the subnested data
+        const originalLoadSubnested = loadSubnested;
+        loadSubnested = async function(name) {
+            await originalLoadSubnested(name);
+            // Get the subnested data and show mod tools if moderator
+            try {
+                currentSubnested = await api.getSubnested(name);
+                // Check if user is moderator (from backend or by checking moderatorIds)
+                const isModerator = currentSubnested.isModerator ||
+                    (currentUser && currentSubnested.moderatorIds &&
+                     currentSubnested.moderatorIds.includes(currentUser.id));
+
+                if (isModerator) {
+                    document.getElementById('mod-tools-box').style.display = 'block';
+                }
+            } catch (e) {
+                console.error('Failed to load subnested data', e);
+            }
+        };
+
+        loadSubnested(subnestedName);
+
+        // Modal functions
+        function openEditModal() {
+            if (!currentSubnested) return;
+            document.getElementById('edit-description').value = currentSubnested.description || '';
+            document.getElementById('edit-banner').value = currentSubnested.bannerUrl || '';
+            document.getElementById('edit-icon').value = currentSubnested.iconUrl || '';
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        function openFlairsModal() {
+            if (!currentSubnested) return;
+            renderFlairsList();
+            document.getElementById('flairs-modal').style.display = 'flex';
+        }
+
+        function closeFlairsModal() {
+            document.getElementById('flairs-modal').style.display = 'none';
+        }
+
+        function openRulesModal() {
+            if (!currentSubnested) return;
+            const rules = currentSubnested.rules || [];
+            document.getElementById('rules-textarea').value = rules.join('\n');
+            document.getElementById('rules-modal').style.display = 'flex';
+        }
+
+        function closeRulesModal() {
+            document.getElementById('rules-modal').style.display = 'none';
+        }
+
+        function renderFlairsList() {
+            const container = document.getElementById('flairs-list');
+            const flairs = currentSubnested.flairs || [];
+            if (flairs.length === 0) {
+                container.innerHTML = '<p style="color: #888;">No flairs yet.</p>';
+                return;
+            }
+            container.innerHTML = flairs.map(flair => `
+                <div class="flair-item">
+                    <span class="flair-preview" style="background-color: ${flair.color || '#808080'}">${flair.name}</span>
+                    <button class="delete-flair-btn" onclick="deleteFlair('${flair.name}')">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        // Form handlers
+        document.getElementById('edit-community-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await api.updateSubnested(currentSubnested.id, {
+                    description: document.getElementById('edit-description').value,
+                    bannerUrl: document.getElementById('edit-banner').value,
+                    iconUrl: document.getElementById('edit-icon').value
+                });
+                closeEditModal();
+                location.reload();
+            } catch (error) {
+                alert('Failed to update community: ' + error.message);
+            }
+        });
+
+        document.getElementById('add-flair-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await api.addFlair(currentSubnested.id, {
+                    name: document.getElementById('flair-name').value,
+                    color: document.getElementById('flair-color').value
+                });
+                document.getElementById('flair-name').value = '';
+                currentSubnested = await api.getSubnested(subnestedName);
+                renderFlairsList();
+            } catch (error) {
+                alert('Failed to add flair: ' + error.message);
+            }
+        });
+
+        document.getElementById('edit-rules-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const rulesText = document.getElementById('rules-textarea').value;
+                const rules = rulesText.split('\n').filter(r => r.trim());
+                await api.updateSubnestedRules(currentSubnested.id, rules);
+                closeRulesModal();
+                currentSubnested.rules = rules;
+                alert('Rules updated successfully!');
+            } catch (error) {
+                alert('Failed to update rules: ' + error.message);
+            }
+        });
+
+        async function deleteFlair(flairName) {
+            if (!confirm(`Delete flair "${flairName}"?`)) return;
+            try {
+                await api.removeFlair(currentSubnested.id, flairName);
+                currentSubnested = await api.getSubnested(subnestedName);
+                renderFlairsList();
+            } catch (error) {
+                alert('Failed to delete flair: ' + error.message);
+            }
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>
