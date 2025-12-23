@@ -76,6 +76,22 @@ public class Post {
     @Builder.Default
     private boolean locked = false;
 
+    @Builder.Default
+    private boolean pinned = false;
+
+    private Instant pinnedAt;
+
+    private String pinnedById;
+
+    @Builder.Default
+    private boolean removed = false;
+
+    private String removedById;
+
+    private String removedByUsername;
+
+    private String removalReason;
+
     public enum PostType {
         TEXT,
         LINK,

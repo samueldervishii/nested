@@ -30,6 +30,9 @@ public class PostResponse {
     private boolean nsfw;
     private boolean spoiler;
     private boolean locked;
+    private boolean pinned;
+    private boolean removed;
+    private String removalReason;
     private Integer userVote; // 1, -1, or null
     private boolean saved;
     private boolean hidden;

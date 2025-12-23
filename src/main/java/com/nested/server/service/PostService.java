@@ -39,7 +39,7 @@ public class PostService {
 
     public PostResponse createPost(PostRequest request, User author) {
         Subs subs = subService.findByName(request.getSubName())
-                .orElseThrow(() -> new ResourceNotFoundException("Subnested", "name", request.getSubName()));
+                .orElseThrow(() -> new ResourceNotFoundException("Sub", "name", request.getSubName()));
 
         Post post = Post.builder()
                 .title(request.getTitle())
@@ -91,7 +91,20 @@ public class PostService {
     public List<PostResponse> getPostsBySubs(String subName, String sort, int page, int size, User user) {
         Pageable pageable = createPageable(sort, page, size);
         Page<Post> posts = postRepository.findBySubName(subName, pageable);
-        return mapPostsWithUserVotes(posts.getContent(), user);
+        List<Post> postList = posts.getContent();
+
+        // Sort pinned posts first (only on first page)
+        if (page == 0) {
+            postList = postList.stream()
+                    .sorted((p1, p2) -> {
+                        if (p1.isPinned() && !p2.isPinned()) return -1;
+                        if (!p1.isPinned() && p2.isPinned()) return 1;
+                        return 0;
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        return mapPostsWithUserVotes(postList, user);
     }
 
     public List<PostResponse> getPostsByUser(String authorId, int page, int size, User currentUser) {
@@ -178,6 +191,9 @@ public class PostService {
                 .nsfw(post.isNsfw())
                 .spoiler(post.isSpoiler())
                 .locked(post.isLocked())
+                .pinned(post.isPinned())
+                .removed(post.isRemoved())
+                .removalReason(post.getRemovalReason())
                 .userVote(userVote)
                 .build();
     }

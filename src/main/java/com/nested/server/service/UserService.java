@@ -6,7 +6,7 @@ import com.nested.server.model.User;
 import com.nested.server.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,12 +17,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
+@NullMarked
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -35,7 +32,7 @@ public class UserService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
@@ -58,18 +55,6 @@ public class UserService implements UserDetailsService {
 
     public List<User> findAllUsers() {
         return userRepository.findAll();
-    }
-
-    public User save(User user) {
-        return userRepository.save(user);
-    }
-
-    public boolean existsByUsername(String username) {
-        return userRepository.existsByUsername(username);
-    }
-
-    public boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
     }
 
     /**
@@ -129,7 +114,7 @@ public class UserService implements UserDetailsService {
             throw new BadRequestException("Current password is incorrect");
         }
 
-        if (newPassword == null || newPassword.length() < 6) {
+        if (newPassword.length() < 6) {
             throw new BadRequestException("New password must be at least 6 characters");
         }
 
@@ -158,7 +143,7 @@ public class UserService implements UserDetailsService {
             throw new BadRequestException("Reset token has expired");
         }
 
-        if (newPassword == null || newPassword.length() < 6) {
+        if (newPassword.length() < 6) {
             throw new BadRequestException("New password must be at least 6 characters");
         }
 

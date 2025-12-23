@@ -1,6 +1,5 @@
 package com.nested.server.service;
 
-
 import com.nested.server.dto.VoteRequest;
 import com.nested.server.model.Comment;
 import com.nested.server.model.Post;
@@ -30,7 +29,7 @@ public class VoteService {
                 user.getId(), request.getTargetId(), request.getTargetType());
 
         String authorId = getAuthorId(request.getTargetId(), request.getTargetType());
-        int voteChange = 0;
+        int voteChange;
 
         if (existingVote.isPresent()) {
             Vote vote = existingVote.get();

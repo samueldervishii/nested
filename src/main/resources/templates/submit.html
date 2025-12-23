@@ -172,9 +172,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="subnested">Community</label>
+                    <label for="sub">Community</label>
                     <div class="community-selector">
-                        <input type="text" id="subnested" name="subnested" required placeholder="Search for a community..." autocomplete="off">
+                        <input type="text" id="sub" name="sub" required placeholder="Search for a community..." autocomplete="off">
                         <input type="hidden" id="selected-community" name="selected-community">
                         <div id="community-dropdown" class="community-dropdown"></div>
                     </div>
@@ -229,7 +229,7 @@
         });
 
         // Community search functionality
-        const communityInput = document.getElementById('subnested');
+        const communityInput = document.getElementById('sub');
         const dropdown = document.getElementById('community-dropdown');
 
         communityInput.addEventListener('focus', () => {
@@ -256,9 +256,9 @@
             try {
                 let communities;
                 if (query) {
-                    communities = await api.searchSubnested(query);
+                    communities = await api.searchSub(query);
                 } else {
-                    communities = await api.getPopularSubnested();
+                    communities = await api.getPopularSubs();
                 }
 
                 if (communities.length === 0) {

@@ -463,24 +463,24 @@ a:hover {
     line-height: 1.5;
 }
 
-/* Subnested/Community Info */
-.subnested-info h2 {
+/* sub/Community Info */
+.sub-info h2 {
     font-size: 16px;
     margin-bottom: 5px;
 }
 
-.subnested-info p {
+.sub-info p {
     font-size: 12px;
     color: #666;
     line-height: 1.4;
 }
 
-.subnested-stats {
+.sub-stats {
     margin-top: 10px;
     font-size: 12px;
 }
 
-.subnested-stats strong {
+.sub-stats strong {
     font-size: 20px;
     display: block;
     color: #ff6b35;
@@ -675,18 +675,18 @@ a:hover {
 }
 
 /* Community Banner */
-.subnested-banner {
+.sub-banner {
     background: linear-gradient(to bottom, #cee3f8, #b8d4f0);
     padding: 25px;
     border-bottom: 2px solid #5f99cf;
 }
 
-.subnested-banner h1 {
+.sub-banner h1 {
     font-size: 26px;
     color: #1a1a1b;
 }
 
-.subnested-banner .subscribe-btn {
+.sub-banner .subscribe-btn {
     display: inline-block;
     padding: 8px 20px;
     background: linear-gradient(to bottom, #ff8b60, #ff6b35);
@@ -699,11 +699,11 @@ a:hover {
     transition: all 0.2s;
 }
 
-.subnested-banner .subscribe-btn:hover {
+.sub-banner .subscribe-btn:hover {
     background: linear-gradient(to bottom, #ff9b70, #ff7b45);
 }
 
-.subnested-banner .subscribe-btn.subscribed {
+.sub-banner .subscribe-btn.subscribed {
     background: linear-gradient(to bottom, #f0f0f0, #ddd);
     color: #333;
 }
@@ -910,11 +910,11 @@ a:hover {
         font-size: 13px;
     }
 
-    .subnested-banner {
+    .sub-banner {
         padding: 15px;
     }
 
-    .subnested-banner h1 {
+    .sub-banner h1 {
         font-size: 20px;
     }
 

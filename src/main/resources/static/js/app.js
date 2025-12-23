@@ -30,13 +30,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadSavedPosts();
     } else if (path === '/c/popular') {
         loadPopularFeed();
-        loadPopularSubnested();
+        loadPopularsub();
     } else if (path === '/c/all') {
         loadAllFeed();
-        loadPopularSubnested();
+        loadPopularsub();
     } else if (path === '/' || path === '') {
         loadHomeFeed();
-        loadPopularSubnested();
+        loadPopularsub();
     }
 });
 
@@ -89,8 +89,8 @@ function setupSortTabs() {
             // Reload content
             const path = window.location.pathname;
             if (path.startsWith('/n/')) {
-                const subnestedName = path.split('/')[2];
-                loadSubnestedPosts(subnestedName);
+                const subName = path.split('/')[2];
+                loadSubPosts(subName);
             } else {
                 loadHomeFeed();
             }
@@ -157,18 +157,18 @@ async function loadAllFeed() {
 }
 
 // Load popular communities
-async function loadPopularSubnested() {
-    const container = document.getElementById('popular-subnested');
+async function loadPopularsub() {
+    const container = document.getElementById('popular-sub');
     if (!container) return;
 
     console.log('[App] Loading popular communities...');
 
     try {
-        const communities = await api.getPopularSubnested();
+        const communities = await api.getPopularSubs();
         console.log('[App] Loaded communities:', communities);
 
         if (communities.length === 0) {
-            container.innerHTML = '<p style="font-size: 12px; color: #888;">No communities yet. <a href="/submit">Create one!</a></p>';
+            container.innerHTML = '<p style="font-size: 12px; color: #888;">No communities yet. <a href="sub/create">Create one!</a></p>';
             return;
         }
 
@@ -203,8 +203,8 @@ function renderPosts(posts, container) {
 function renderPost(post, rank) {
     const thumbnailHtml = getThumbnailHtml(post);
     const flairHtml = post.flair ? `<span class="post-flair ${post.flair.toLowerCase()}">${post.flair}</span>` : '';
-    const subnestedName = post.subName || post.subnestedName; // support both for compatibility
-    const domainHtml = post.url ? `<span class="post-domain">(${getDomain(post.url)})</span>` : post.postType === 'TEXT' ? `<span class="post-domain">(self.${subnestedName})</span>` : '';
+    const subName = post.subName || post.subName; // support both for compatibility
+    const domainHtml = post.url ? `<span class="post-domain">(${getDomain(post.url)})</span>` : post.postType === 'TEXT' ? `<span class="post-domain">(self.${subName})</span>` : '';
 
     const upvoteClass = post.userVote === 1 ? 'active' : '';
     const downvoteClass = post.userVote === -1 ? 'active' : '';
@@ -220,17 +220,17 @@ function renderPost(post, rank) {
             ${thumbnailHtml}
             <div class="post-content">
                 <div class="post-title">
-                    <a href="${post.url || `/n/${subnestedName}/comments/${post.id}`}">${escapeHtml(post.title)}</a>
+                    <a href="${post.url || `/n/${subName}/comments/${post.id}`}">${escapeHtml(post.title)}</a>
                     ${flairHtml}
                     ${domainHtml}
                 </div>
                 <div class="post-meta">
                     submitted ${post.timeAgo} by <a href="/u/${post.authorUsername}">${post.authorUsername}</a>
-                    to <a href="/n/${subnestedName}">n/${subnestedName}</a>
+                    to <a href="/n/${subName}">n/${subName}</a>
                 </div>
                 <div class="post-actions">
-                    <a href="/n/${subnestedName}/comments/${post.id}" class="post-comments">${post.commentCount} comments</a>
-                    <a href="#" onclick="sharePost('${post.id}', '${subnestedName}'); return false;">share</a>
+                    <a href="/n/${subName}/comments/${post.id}" class="post-comments">${post.commentCount} comments</a>
+                    <a href="#" onclick="sharePost('${post.id}', '${subName}'); return false;">share</a>
                     <a href="#" onclick="toggleSavePost('${post.id}'); return false;" class="save-btn-${post.id}">${post.saved ? 'unsave' : 'save'}</a>
                     <a href="#" onclick="toggleHidePost('${post.id}'); return false;">hide</a>
                     ${currentUser && currentUser.id === post.authorId ? `
@@ -310,42 +310,42 @@ async function handleVote(e) {
     }
 }
 
-// Load subnested page
-async function loadSubnested(subnestedName) {
+// Load sub page
+async function loadsub(subName) {
     try {
-        const subnested = await api.getSubnested(subnestedName);
+        const sub = await api.getSub(subName);
 
-        document.getElementById('page-title').textContent = `n/${subnested.name} - nested`;
-        document.getElementById('subnested-name').textContent = `n/${subnested.name}`;
-        document.getElementById('subnested-description').textContent = subnested.description || '';
-        document.getElementById('sidebar-subnested-name').textContent = `n/${subnested.name}`;
-        document.getElementById('sidebar-description').textContent = subnested.description || 'No description available.';
-        document.getElementById('subscriber-count').textContent = subnested.subscriberCount.toLocaleString();
-        document.getElementById('created-date').textContent = subnested.createdAt;
+        document.getElementById('page-title').textContent = `n/${sub.name} - nested`;
+        document.getElementById('sub-name').textContent = `n/${sub.name}`;
+        document.getElementById('sub-description').textContent = sub.description || '';
+        document.getElementById('sidebar-sub-name').textContent = `n/${sub.name}`;
+        document.getElementById('sidebar-description').textContent = sub.description || 'No description available.';
+        document.getElementById('subscriber-count').textContent = sub.subscriberCount.toLocaleString();
+        document.getElementById('created-date').textContent = sub.createdAt;
 
         // Subscribe button - hide for moderators
         const subscribeBtn = document.getElementById('subscribe-btn');
         if (currentUser && currentUser.authenticated) {
             // Check if user is moderator (from backend or by checking moderatorIds)
-            const isModerator = subnested.isModerator ||
-                (subnested.moderatorIds && subnested.moderatorIds.includes(currentUser.id));
+            const isModerator = sub.isModerator ||
+                (sub.moderatorIds && sub.moderatorIds.includes(currentUser.id));
 
             if (isModerator) {
                 // Moderators don't see subscribe button
                 subscribeBtn.style.display = 'none';
             } else {
                 subscribeBtn.style.display = 'inline-block';
-                subscribeBtn.textContent = subnested.isSubscribed ? 'Unsubscribe' : 'Subscribe';
-                subscribeBtn.classList.toggle('subscribed', subnested.isSubscribed);
+                subscribeBtn.textContent = sub.isSubscribed ? 'Unsubscribe' : 'Subscribe';
+                subscribeBtn.classList.toggle('subscribed', sub.isSubscribed);
                 subscribeBtn.onclick = async () => {
-                    if (subnested.isSubscribed) {
-                        await api.unsubscribe(subnested.id);
-                        subnested.isSubscribed = false;
+                    if (sub.isSubscribed) {
+                        await api.unsubscribe(sub.id);
+                        sub.isSubscribed = false;
                         subscribeBtn.textContent = 'Subscribe';
                         subscribeBtn.classList.remove('subscribed');
                     } else {
-                        await api.subscribe(subnested.id);
-                        subnested.isSubscribed = true;
+                        await api.subscribe(sub.id);
+                        sub.isSubscribed = true;
                         subscribeBtn.textContent = 'Unsubscribe';
                         subscribeBtn.classList.add('subscribed');
                     }
@@ -353,19 +353,19 @@ async function loadSubnested(subnestedName) {
             }
         }
 
-        loadSubnestedPosts(subnestedName);
+        loadSubPosts(subName);
     } catch (error) {
-        document.getElementById('subnested-name').textContent = 'Community not found';
+        document.getElementById('sub-name').textContent = 'Community not found';
     }
 }
 
-// Load subnested posts
-async function loadSubnestedPosts(subnestedName) {
+// Load sub posts
+async function loadSubPosts(subName) {
     const postList = document.getElementById('post-list');
     postList.innerHTML = '<div class="loading">Loading posts...</div>';
 
     try {
-        const posts = await api.getPostsBySubnested(subnestedName, currentSort);
+        const posts = await api.getPostsBySub(subName, currentSort);
         renderPosts(posts, postList);
     } catch (error) {
         postList.innerHTML = '<div class="loading">Failed to load posts.</div>';
@@ -373,14 +373,14 @@ async function loadSubnestedPosts(subnestedName) {
 }
 
 // Load post detail page
-async function loadPost(postId, subnestedName) {
+async function loadPost(postId, subName) {
     const postDetail = document.getElementById('post-detail');
     const commentsList = document.getElementById('comments-list');
 
     try {
         // Load post
         const post = await api.getPost(postId);
-        document.getElementById('page-title').textContent = `${post.title} : ${post.subName || post.subnestedName}`;
+        document.getElementById('page-title').textContent = `${post.title} : ${post.subName || post.subName}`;
 
         const upvoteClass = post.userVote === 1 ? 'active' : '';
         const downvoteClass = post.userVote === -1 ? 'active' : '';
@@ -396,7 +396,7 @@ async function loadPost(postId, subnestedName) {
                     <div class="post-title">${escapeHtml(post.title)}</div>
                     <div class="post-meta">
                         submitted ${post.timeAgo} by <a href="/u/${post.authorUsername}">${post.authorUsername}</a>
-                        to <a href="/n/${post.subName || post.subnestedName}">n/${post.subName || post.subnestedName}</a>
+                        to <a href="/n/${post.subName || post.subName}">n/${post.subName || post.subName}</a>
                     </div>
                     ${post.content ? `<div class="post-content-text">${escapeHtml(post.content)}</div>` : ''}
                     ${post.url ? `<div class="post-content-text"><a href="${post.url}" target="_blank">${post.url}</a></div>` : ''}
@@ -433,11 +433,11 @@ async function loadPost(postId, subnestedName) {
             };
         }
 
-        // Load subnested info
-        const subnested = await api.getSubnested(subnestedName);
-        document.getElementById('sidebar-subnested-name').textContent = `n/${subnested.name}`;
-        document.getElementById('sidebar-description').textContent = subnested.description || 'No description.';
-        document.getElementById('subscriber-count').textContent = subnested.subscriberCount.toLocaleString();
+        // Load sub info
+        const sub = await api.getSub(subName);
+        document.getElementById('sidebar-sub-name').textContent = `n/${sub.name}`;
+        document.getElementById('sidebar-description').textContent = sub.description || 'No description.';
+        document.getElementById('subscriber-count').textContent = sub.subscriberCount.toLocaleString();
 
         // Load comments
         loadComments(postId);
@@ -561,10 +561,38 @@ async function loadUserProfile(username) {
         document.getElementById('user-karma').textContent = `${user.karma} karma`;
         document.getElementById('user-created').textContent = `• member since ${new Date(user.createdAt).toLocaleDateString()}`;
 
+        // Load user's bio
+        if (user.bio) {
+            document.getElementById('profile-about').textContent = user.bio;
+        }
+
         // Load user's posts
         const posts = await api.getUserPosts(user.id);
         const postList = document.getElementById('post-list');
         renderPosts(posts, postList);
+
+        // Load user's moderated subs
+        try {
+            const moderatedSubs = await api.getModeratedSubs(username);
+            if (moderatedSubs && moderatedSubs.length > 0) {
+                const subsBox = document.getElementById('moderated-subs-box');
+                const subsList = document.getElementById('moderated-subs-list');
+
+                subsBox.style.display = 'block';
+                subsList.innerHTML = moderatedSubs.map(sub => `
+                    <div style="margin-bottom: 8px;">
+                        <a href="/n/${sub.name}" style="color: #0079d3; text-decoration: none; font-weight: 500;">
+                            n/${sub.name}
+                        </a>
+                        <span style="color: #7c7c7c; font-size: 11px; margin-left: 5px;">
+                            ${sub.subscriberCount} members
+                        </span>
+                    </div>
+                `).join('');
+            }
+        } catch (e) {
+            console.log('Could not load moderated subs');
+        }
     } catch (error) {
         document.getElementById('profile-username').textContent = 'User not found';
     }
@@ -594,8 +622,8 @@ function getDomain(url) {
 }
 
 // Share post (copy link to clipboard)
-async function sharePost(postId, subnestedName) {
-    const url = `${window.location.origin}/n/${subnestedName}/comments/${postId}`;
+async function sharePost(postId, subName) {
+    const url = `${window.location.origin}/n/${subName}/comments/${postId}`;
     try {
         await navigator.clipboard.writeText(url);
         showNotification('Link copied to clipboard!');

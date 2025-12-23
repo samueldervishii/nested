@@ -77,8 +77,8 @@
             };
 
             try {
-                const subnested = await api.createSubnested(data);
-                window.location.href = `/n/${subnested.name}`;
+                const sub = await api.createSub(data);
+                window.location.href = `/n/${sub.name}`;
             } catch (error) {
                 document.getElementById('error-message').textContent = error.message || 'Failed to create community';
                 document.getElementById('error-message').style.display = 'block';

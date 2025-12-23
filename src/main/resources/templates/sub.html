@@ -35,9 +35,9 @@
         </div>
     </header>
 
-    <div class="subnested-banner" id="subnested-banner">
-        <h1 id="subnested-name">Loading...</h1>
-        <p id="subnested-description"></p>
+    <div class="sub-banner" id="sub-banner">
+        <h1 id="sub-name">Loading...</h1>
+        <p id="sub-description"></p>
         <button class="subscribe-btn" id="subscribe-btn" style="display: none;">Join</button>
     </div>
 
@@ -62,11 +62,11 @@
                 </div>
             </div>
 
-            <div class="sidebar-box" id="subnested-info-box">
-                <div class="sidebar-box-header" id="sidebar-subnested-name">About Community</div>
-                <div class="sidebar-box-content subnested-info">
+            <div class="sidebar-box" id="sub-info-box">
+                <div class="sidebar-box-header" id="sidebar-sub-name">About Community</div>
+                <div class="sidebar-box-content sub-info">
                     <p id="sidebar-description"></p>
-                    <div class="subnested-stats">
+                    <div class="sub-stats">
                         <strong id="subscriber-count">0</strong>
                         <span>members</span>
                     </div>
@@ -215,37 +215,37 @@
     <script src="/js/api.js"></script>
     <script src="/js/app.js"></script>
     <script>
-        const subnestedName = window.location.pathname.split('/')[2];
-        let currentSubnested = null;
+        const subName = window.location.pathname.split('/')[2];
+        let currentsub = null;
 
-        // Override loadSubnested to store the subnested data
-        const originalLoadSubnested = loadSubnested;
-        loadSubnested = async function(name) {
-            await originalLoadSubnested(name);
-            // Get the subnested data and show mod tools if moderator
+        // Override loadsub to store the sub data
+        const originalLoadsub = loadsub;
+        loadsub = async function(name) {
+            await originalLoadsub(name);
+            // Get the sub data and show mod tools if moderator
             try {
-                currentSubnested = await api.getSubnested(name);
+                currentsub = await api.getSub(name);
                 // Check if user is moderator (from backend or by checking moderatorIds)
-                const isModerator = currentSubnested.isModerator ||
-                    (currentUser && currentSubnested.moderatorIds &&
-                     currentSubnested.moderatorIds.includes(currentUser.id));
+                const isModerator = currentsub.isModerator ||
+                    (currentUser && currentsub.moderatorIds &&
+                     currentsub.moderatorIds.includes(currentUser.id));
 
                 if (isModerator) {
                     document.getElementById('mod-tools-box').style.display = 'block';
                 }
             } catch (e) {
-                console.error('Failed to load subnested data', e);
+                console.error('Failed to load sub data', e);
             }
         };
 
-        loadSubnested(subnestedName);
+        loadsub(subName);
 
         // Modal functions
         function openEditModal() {
-            if (!currentSubnested) return;
-            document.getElementById('edit-description').value = currentSubnested.description || '';
-            document.getElementById('edit-banner').value = currentSubnested.bannerUrl || '';
-            document.getElementById('edit-icon').value = currentSubnested.iconUrl || '';
+            if (!currentsub) return;
+            document.getElementById('edit-description').value = currentsub.description || '';
+            document.getElementById('edit-banner').value = currentsub.bannerUrl || '';
+            document.getElementById('edit-icon').value = currentsub.iconUrl || '';
             document.getElementById('edit-modal').style.display = 'flex';
         }
 
@@ -254,7 +254,7 @@
         }
 
         function openFlairsModal() {
-            if (!currentSubnested) return;
+            if (!currentsub) return;
             renderFlairsList();
             document.getElementById('flairs-modal').style.display = 'flex';
         }
@@ -264,8 +264,8 @@
         }
 
         function openRulesModal() {
-            if (!currentSubnested) return;
-            const rules = currentSubnested.rules || [];
+            if (!currentsub) return;
+            const rules = currentsub.rules || [];
             document.getElementById('rules-textarea').value = rules.join('\n');
             document.getElementById('rules-modal').style.display = 'flex';
         }
@@ -276,7 +276,7 @@
 
         function renderFlairsList() {
             const container = document.getElementById('flairs-list');
-            const flairs = currentSubnested.flairs || [];
+            const flairs = currentsub.flairs || [];
             if (flairs.length === 0) {
                 container.innerHTML = '<p style="color: #888;">No flairs yet.</p>';
                 return;
@@ -293,7 +293,7 @@
         document.getElementById('edit-community-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             try {
-                await api.updateSubnested(currentSubnested.id, {
+                await api.updateSub(currentsub.id, {
                     description: document.getElementById('edit-description').value,
                     bannerUrl: document.getElementById('edit-banner').value,
                     iconUrl: document.getElementById('edit-icon').value
@@ -308,12 +308,12 @@
         document.getElementById('add-flair-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             try {
-                await api.addFlair(currentSubnested.id, {
+                await api.addFlair(currentsub.id, {
                     name: document.getElementById('flair-name').value,
                     color: document.getElementById('flair-color').value
                 });
                 document.getElementById('flair-name').value = '';
-                currentSubnested = await api.getSubnested(subnestedName);
+                currentsub = await api.getSub(subName);
                 renderFlairsList();
             } catch (error) {
                 alert('Failed to add flair: ' + error.message);
@@ -325,9 +325,9 @@
             try {
                 const rulesText = document.getElementById('rules-textarea').value;
                 const rules = rulesText.split('\n').filter(r => r.trim());
-                await api.updateSubnestedRules(currentSubnested.id, rules);
+                await api.updateSubRules(currentsub.id, rules);
                 closeRulesModal();
-                currentSubnested.rules = rules;
+                currentsub.rules = rules;
                 alert('Rules updated successfully!');
             } catch (error) {
                 alert('Failed to update rules: ' + error.message);
@@ -337,8 +337,8 @@
         async function deleteFlair(flairName) {
             if (!confirm(`Delete flair "${flairName}"?`)) return;
             try {
-                await api.removeFlair(currentSubnested.id, flairName);
-                currentSubnested = await api.getSubnested(subnestedName);
+                await api.removeFlair(currentsub.id, flairName);
+                currentsub = await api.getSub(subName);
                 renderFlairsList();
             } catch (error) {
                 alert('Failed to delete flair: ' + error.message);

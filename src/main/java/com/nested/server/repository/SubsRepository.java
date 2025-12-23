@@ -10,8 +10,6 @@ import java.util.Optional;
 @Repository
 public interface SubsRepository extends MongoRepository<Subs, String> {
 
-    Optional<Subs> findByName(String name);
-
     Optional<Subs> findByNameIgnoreCase(String name);
 
     boolean existsByNameIgnoreCase(String name);
@@ -21,4 +19,10 @@ public interface SubsRepository extends MongoRepository<Subs, String> {
     List<Subs> findTop10ByOrderBySubscriberCountDesc();
 
     List<Subs> findByIdIn(List<String> ids);
+
+    // Find subs where user is a moderator
+    List<Subs> findByModeratorIdsContaining(String moderatorId);
+
+    // Find subs created by user
+    List<Subs> findByCreatorId(String creatorId);
 }

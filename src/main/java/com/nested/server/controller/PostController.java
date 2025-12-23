@@ -108,9 +108,9 @@ public class PostController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/subs/{subnestedName}")
-    public ResponseEntity<List<PostResponse>> getPostsBySubnested(
-            @PathVariable String subnestedName,
+    @GetMapping("/subs/{subName}")
+    public ResponseEntity<List<PostResponse>> getPostsBySub(
+            @PathVariable String subName,
             @RequestParam(defaultValue = "hot") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "25") int size,
@@ -119,7 +119,7 @@ public class PostController {
         User user = userDetails != null ?
                 userService.findByUsername(userDetails.getUsername()).orElse(null) : null;
 
-        List<PostResponse> posts = postService.getPostsBySubs(subnestedName, sort, page, size, user);
+        List<PostResponse> posts = postService.getPostsBySubs(subName, sort, page, size, user);
         return ResponseEntity.ok(posts);
     }
 

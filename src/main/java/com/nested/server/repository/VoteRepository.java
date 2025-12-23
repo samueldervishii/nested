@@ -14,5 +14,4 @@ public interface VoteRepository extends MongoRepository<Vote, String> {
 
     List<Vote> findByUserIdAndTargetIdIn(String userId, List<String> targetIds);
 
-    void deleteByUserIdAndTargetIdAndTargetType(String userId, String targetId, Vote.VoteTargetType targetType);
 }

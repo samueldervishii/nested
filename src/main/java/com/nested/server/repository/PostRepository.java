@@ -15,15 +15,11 @@ import java.util.Set;
 @Repository
 public interface PostRepository extends MongoRepository<Post, String> {
 
-    Page<Post> findBySubId(String subId, Pageable pageable);
-
     Page<Post> findBySubName(String subName, Pageable pageable);
 
     Page<Post> findByAuthorId(String authorId, Pageable pageable);
 
     Page<Post> findBySubIdIn(List<String> subIds, Pageable pageable);
-
-    Page<Post> findByCreatedAtAfter(Instant since, Pageable pageable);
 
     List<Post> findTop100ByOrderByVoteCountDesc();
 

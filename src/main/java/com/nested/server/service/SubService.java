@@ -111,10 +111,6 @@ public class SubService {
         return sub.getModeratorIds().contains(user.getId());
     }
 
-    public SubResponse mapToResponse(Subs sub, boolean isSubscribed) {
-        return mapToResponse(sub, isSubscribed, null);
-    }
-
     public SubResponse mapToResponse(Subs sub, boolean isSubscribed, User currentUser) {
         return SubResponse.builder()
                 .id(sub.getId())
@@ -230,6 +226,20 @@ public class SubService {
      * Migration method: Add all existing users to a Subs's subscriberIds.
      * This is a one-time fix to populate subscriberIds for existing data.
      */
+    public List<SubResponse> getModeratedSubs(String userId) {
+        List<Subs> subs = subsRepository.findByModeratorIdsContaining(userId);
+        return subs.stream()
+                .map(sub -> mapToResponse(sub, false, null))
+                .collect(Collectors.toList());
+    }
+
+    public List<SubResponse> getCreatedSubs(String userId) {
+        List<Subs> subs = subsRepository.findByCreatorId(userId);
+        return subs.stream()
+                .map(sub -> mapToResponse(sub, false, null))
+                .collect(Collectors.toList());
+    }
+
     public int migrateAllUsersToSubs(String subsName) {
         Subs sub = subsRepository.findByNameIgnoreCase(subsName)
                 .orElseThrow(() -> new ResourceNotFoundException("Subs", "name", subsName));

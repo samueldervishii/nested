@@ -48,6 +48,9 @@ public class Subs {
     @Builder.Default
     private Set<String> subscriberIds = new HashSet<>();
 
+    @Builder.Default
+    private Set<String> bannedUserIds = new HashSet<>();
+
     @Indexed
     @Builder.Default
     private int subscriberCount = 0;

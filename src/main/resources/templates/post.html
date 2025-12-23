@@ -46,11 +46,11 @@
         </main>
 
         <aside class="sidebar">
-            <div class="sidebar-box" id="subnested-info-box">
-                <div class="sidebar-box-header" id="sidebar-subnested-name">About Community</div>
-                <div class="sidebar-box-content subnested-info">
+            <div class="sidebar-box" id="sub-info-box">
+                <div class="sidebar-box-header" id="sidebar-sub-name">About Community</div>
+                <div class="sidebar-box-content sub-info">
                     <p id="sidebar-description"></p>
-                    <div class="subnested-stats">
+                    <div class="sub-stats">
                         <strong id="subscriber-count">0</strong>
                         <span>members</span>
                     </div>
@@ -63,9 +63,9 @@
     <script src="/js/app.js"></script>
     <script>
         const pathParts = window.location.pathname.split('/');
-        const subnestedName = pathParts[2];
+        const subName = pathParts[2];
         const postId = pathParts[4];
-        loadPost(postId, subnestedName);
+        loadPost(postId, subName);
     </script>
 </body>
 </html>

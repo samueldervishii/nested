@@ -89,8 +89,8 @@ const api = {
         return this.request(`/posts?sort=${sort}&page=${page}&size=${size}`);
     },
 
-    async getPostsBySubnested(subnestedName, sort = 'hot', page = 0, size = 25) {
-        return this.request(`/posts/subs/${subnestedName}?sort=${sort}&page=${page}&size=${size}`);
+    async getPostsBySub(subName, sort = 'hot', page = 0, size = 25) {
+        return this.request(`/posts/subs/${subName}?sort=${sort}&page=${page}&size=${size}`);
     },
 
     async getPost(id) {
@@ -117,27 +117,27 @@ const api = {
     },
 
     // Subs (communities)
-    async getPopularSubnested() {
+    async getPopularSubs() {
         return this.request('/subs');
     },
 
-    async getSubnested(name) {
+    async getSub(name) {
         return this.request(`/subs/${name}`);
     },
 
-    async createSubnested(data) {
+    async createSub(data) {
         return this.request('/subs', {
             method: 'POST',
             body: JSON.stringify(data)
         });
     },
 
-    async subscribe(subnestedId) {
-        return this.request(`/subs/${subnestedId}/subscribe`, { method: 'POST' });
+    async subscribe(subId) {
+        return this.request(`/subs/${subId}/subscribe`, { method: 'POST' });
     },
 
-    async unsubscribe(subnestedId) {
-        return this.request(`/subs/${subnestedId}/unsubscribe`, { method: 'POST' });
+    async unsubscribe(subId) {
+        return this.request(`/subs/${subId}/unsubscribe`, { method: 'POST' });
     },
 
     // Comments
@@ -242,34 +242,43 @@ const api = {
     },
 
     // Subs moderation
-    async updateSubnested(id, data) {
+    async updateSub(id, data) {
         return this.request(`/subs/${id}`, {
             method: 'PUT',
             body: JSON.stringify(data)
         });
     },
 
-    async updateSubnestedRules(id, rules) {
+    async updateSubRules(id, rules) {
         return this.request(`/subs/${id}/rules`, {
             method: 'PUT',
             body: JSON.stringify(rules)
         });
     },
 
-    async addFlair(subnestedId, flair) {
-        return this.request(`/subs/${subnestedId}/flairs`, {
+    async addFlair(subId, flair) {
+        return this.request(`/subs/${subId}/flairs`, {
             method: 'POST',
             body: JSON.stringify(flair)
         });
     },
 
-    async removeFlair(subnestedId, flairName) {
-        return this.request(`/subs/${subnestedId}/flairs/${flairName}`, {
+    async removeFlair(subId, flairName) {
+        return this.request(`/subs/${subId}/flairs/${flairName}`, {
             method: 'DELETE'
         });
     },
 
-    async searchSubnested(query) {
+    async searchSub(query) {
         return this.request(`/subs/search?q=${encodeURIComponent(query)}`);
+    },
+
+    // User moderated/created subs
+    async getModeratedSubs(username) {
+        return this.request(`/users/${username}/moderated-subs`);
+    },
+
+    async getCreatedSubs(username) {
+        return this.request(`/users/${username}/created-subs`);
     }
 };

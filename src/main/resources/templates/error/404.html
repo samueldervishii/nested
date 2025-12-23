@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - Nested</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/images/nested-icon.svg">
+    <style>
+        .error-container {
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 40px;
+            text-align: center;
+            background: #fff;
+            border: 1px solid #ccc;
+        }
+        .error-code {
+            font-size: 120px;
+            font-weight: bold;
+            color: #ff4500;
+            margin-bottom: 0;
+            line-height: 1;
+        }
+        .error-title {
+            font-size: 24px;
+            color: #1a1a1b;
+            margin-bottom: 20px;
+        }
+        .error-message {
+            font-size: 14px;
+            color: #7c7c7c;
+            margin-bottom: 30px;
+        }
+        .error-links {
+            margin-top: 20px;
+        }
+        .error-links a {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background: #0079d3;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .error-links a:hover {
+            background: #0066b3;
+        }
+        .error-links a.secondary {
+            background: #edeff1;
+            color: #1a1a1b;
+        }
+        .error-links a.secondary:hover {
+            background: #d7dadc;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Top Bar -->
+    <div class="header-top">
+        <a href="/">MY COMMUNITIES</a>
+        <a href="/">HOME</a>
+        <a href="/c/popular">POPULAR</a>
+        <a href="/c/all">ALL</a>
+    </div>
+
+    <!-- Main Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <img src="/images/nested-logo.svg" alt="nested">
+            </a>
+            <div class="header-right">
+                <div id="auth-area"></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="error-container">
+        <div class="error-code">404</div>
+        <div class="error-title">Page not found</div>
+        <div class="error-message">
+            The page you're looking for doesn't exist or has been moved.
+        </div>
+        <div class="error-links">
+            <a href="/">Go to Homepage</a>
+            <a href="javascript:history.back()" class="secondary">Go Back</a>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

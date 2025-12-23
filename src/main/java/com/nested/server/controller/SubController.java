@@ -1,11 +1,14 @@
 package com.nested.server.controller;
 
+import com.nested.server.dto.UserFlairRequest;
+import com.nested.server.dto.UserFlairResponse;
 import com.nested.server.exception.ResourceNotFoundException;
 import com.nested.server.model.Subs;
 import com.nested.server.dto.SubRequest;
 import com.nested.server.dto.SubResponse;
 import com.nested.server.model.User;
 import com.nested.server.service.SubService;
+import com.nested.server.service.UserFlairService;
 import com.nested.server.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,7 @@ public class SubController {
 
     private final SubService subService;
     private final UserService userService;
+    private final UserFlairService userFlairService;
 
     @PostMapping
     public ResponseEntity<SubResponse> createSubs(
@@ -229,5 +233,65 @@ public class SubController {
                 "subName", subName,
                 "usersAdded", count
         ));
+    }
+
+    // ==================== USER FLAIR ENDPOINTS ====================
+
+    @GetMapping("/{id}/userflairs")
+    public ResponseEntity<List<UserFlairResponse>> getAllUserFlairs(
+            @PathVariable String id) {
+
+        List<UserFlairResponse> flairs = userFlairService.getAllFlairsForSub(id);
+        return ResponseEntity.ok(flairs);
+    }
+
+    @GetMapping("/{id}/userflairs/{userId}")
+    public ResponseEntity<UserFlairResponse> getUserFlair(
+            @PathVariable String id,
+            @PathVariable String userId) {
+
+        return userFlairService.getUserFlair(id, userId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/userflair")
+    public ResponseEntity<UserFlairResponse> setOwnFlair(
+            @PathVariable String id,
+            @Valid @RequestBody UserFlairRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User user = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", userDetails.getUsername()));
+
+        UserFlairResponse response = userFlairService.setOwnFlair(id, request, user);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/userflairs/{userId}")
+    public ResponseEntity<UserFlairResponse> setUserFlair(
+            @PathVariable String id,
+            @PathVariable String userId,
+            @Valid @RequestBody UserFlairRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User user = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", userDetails.getUsername()));
+
+        UserFlairResponse response = userFlairService.setUserFlair(id, userId, request, user);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}/userflairs/{userId}")
+    public ResponseEntity<Map<String, String>> removeUserFlair(
+            @PathVariable String id,
+            @PathVariable String userId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User user = userService.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", userDetails.getUsername()));
+
+        userFlairService.removeUserFlair(id, userId, user);
+        return ResponseEntity.ok(Map.of("message", "User flair removed successfully"));
     }
 }

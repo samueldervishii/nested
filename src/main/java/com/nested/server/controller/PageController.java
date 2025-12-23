@@ -27,18 +27,18 @@ public class PageController {
         return "submit";
     }
 
-    @GetMapping("/n/{subnested}")
-    public String subnested(@PathVariable String subnested) {
-        return "subnested";
+    @GetMapping("/n/{subs}")
+    public String subs(@PathVariable String subs) {
+        return "sub";
     }
 
-    @GetMapping("/n/{subnested}/comments/{postId}")
-    public String post(@PathVariable String subnested, @PathVariable String postId) {
+    @GetMapping("/n/{subs}/comments/{postId}")
+    public String post(@PathVariable String subs, @PathVariable String postId) {
         return "post";
     }
 
-    @GetMapping("/n/{subnested}/comments/{postId}/{title}")
-    public String postWithTitle(@PathVariable String subnested, @PathVariable String postId, @PathVariable String title) {
+    @GetMapping("/n/{subs}/comments/{postId}/{title}")
+    public String postWithTitle(@PathVariable String subs, @PathVariable String postId, @PathVariable String title) {
         return "post";
     }
 
@@ -47,9 +47,9 @@ public class PageController {
         return "user";
     }
 
-    @GetMapping("/subnested/create")
-    public String createSubnested() {
-        return "create-subnested";
+    @GetMapping("/sub/create")
+    public String createSub() {
+        return "create-sub";
     }
 
     @GetMapping("/search")

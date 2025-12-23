@@ -51,4 +51,13 @@ public class Comment {
 
     @Builder.Default
     private boolean deleted = false;
+
+    @Builder.Default
+    private boolean removed = false;
+
+    private String removedById;
+
+    private String removedByUsername;
+
+    private String removalReason;
 }

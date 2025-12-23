@@ -1,6 +1,8 @@
 package com.nested.server.controller;
 
+import com.nested.server.dto.SubResponse;
 import com.nested.server.model.User;
+import com.nested.server.service.SubService;
 import com.nested.server.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -16,6 +19,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final SubService subService;
 
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
@@ -104,5 +108,19 @@ public class UserController {
         String newPassword = request.get("newPassword");
         userService.resetPassword(token, newPassword);
         return ResponseEntity.ok(Map.of("message", "Password has been reset successfully"));
+    }
+
+    @GetMapping("/{username}/moderated-subs")
+    public ResponseEntity<List<SubResponse>> getModeratedSubs(@PathVariable String username) {
+        return userService.findByUsername(username)
+                .map(user -> ResponseEntity.ok(subService.getModeratedSubs(user.getId())))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{username}/created-subs")
+    public ResponseEntity<List<SubResponse>> getCreatedSubs(@PathVariable String username) {
+        return userService.findByUsername(username)
+                .map(user -> ResponseEntity.ok(subService.getCreatedSubs(user.getId())))
+                .orElse(ResponseEntity.notFound().build());
     }
 }
