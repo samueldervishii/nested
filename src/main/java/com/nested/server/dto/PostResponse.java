@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -16,6 +18,7 @@ public class PostResponse {
     private String content;
     private String url;
     private String thumbnailUrl;
+    private List<String> imageUrls;
     private Post.PostType postType;
     private String authorId;
     private String authorUsername;

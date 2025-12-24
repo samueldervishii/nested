@@ -971,9 +971,29 @@ a:hover {
     margin-bottom: 20px;
 }
 
+.user-profile-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 4px;
+    border: 2px solid #5f99cf;
+    background-color: #fff;
+    object-fit: cover;
+}
+
+.user-details {
+    flex: 1;
+}
+
 .user-profile-header h1 {
     font-size: 22px;
     color: #1a1a1b;
+    margin: 0;
 }
 
 .user-profile-header .user-stats {

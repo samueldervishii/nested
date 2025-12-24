@@ -6,6 +6,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @Data
@@ -36,4 +39,6 @@ public class PostRequest {
     private boolean nsfw = false;
 
     private boolean spoiler = false;
+
+    private List<String> imageUrls = new ArrayList<>();
 }

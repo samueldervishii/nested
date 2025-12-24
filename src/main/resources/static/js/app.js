@@ -204,7 +204,9 @@ function renderPost(post, rank) {
     const thumbnailHtml = getThumbnailHtml(post);
     const flairHtml = post.flair ? `<span class="post-flair ${post.flair.toLowerCase()}">${post.flair}</span>` : '';
     const subName = post.subName || post.subName; // support both for compatibility
-    const domainHtml = post.url ? `<span class="post-domain">(${getDomain(post.url)})</span>` : post.postType === 'TEXT' ? `<span class="post-domain">(self.${subName})</span>` : '';
+    const isImagePost = post.postType === 'IMAGE' || (post.imageUrls && post.imageUrls.length > 0);
+    const domainHtml = post.url ? `<span class="post-domain">(${getDomain(post.url)})</span>` : (post.postType === 'TEXT' || isImagePost) ? `<span class="post-domain">(self.${subName})</span>` : '';
+    const postLink = (post.postType === 'LINK' && post.url) ? post.url : `/n/${subName}/comments/${post.id}`;
 
     const upvoteClass = post.userVote === 1 ? 'active' : '';
     const downvoteClass = post.userVote === -1 ? 'active' : '';
@@ -220,7 +222,7 @@ function renderPost(post, rank) {
             ${thumbnailHtml}
             <div class="post-content">
                 <div class="post-title">
-                    <a href="${post.url || `/n/${subName}/comments/${post.id}`}">${escapeHtml(post.title)}</a>
+                    <a href="${postLink}">${escapeHtml(post.title)}</a>
                     ${flairHtml}
                     ${domainHtml}
                 </div>
@@ -247,6 +249,11 @@ function renderPost(post, rank) {
 function getThumbnailHtml(post) {
     if (post.thumbnailUrl) {
         return `<div class="post-thumbnail"><img src="${post.thumbnailUrl}" alt=""></div>`;
+    }
+
+    // Show first image as thumbnail for image posts
+    if (post.imageUrls && post.imageUrls.length > 0) {
+        return `<div class="post-thumbnail"><img src="${post.imageUrls[0]}" alt="" style="object-fit: cover;"></div>`;
     }
 
     if (post.postType === 'LINK' && post.url) {
@@ -398,6 +405,13 @@ async function loadPost(postId, subName) {
                         submitted ${post.timeAgo} by <a href="/u/${post.authorUsername}">${post.authorUsername}</a>
                         to <a href="/n/${post.subName || post.subName}">n/${post.subName || post.subName}</a>
                     </div>
+                    ${post.imageUrls && post.imageUrls.length > 0 ? `
+                        <div class="post-images" style="margin: 15px 0;">
+                            ${post.imageUrls.map(url => `
+                                <img src="${url}" alt="Post image" style="max-width: 100%; max-height: 500px; border-radius: 4px; margin-bottom: 10px; cursor: pointer;" onclick="window.open('${url}', '_blank')">
+                            `).join('')}
+                        </div>
+                    ` : ''}
                     ${post.content ? `<div class="post-content-text">${escapeHtml(post.content)}</div>` : ''}
                     ${post.url ? `<div class="post-content-text"><a href="${post.url}" target="_blank">${post.url}</a></div>` : ''}
                     <div class="post-actions" style="margin-top: 10px;">
@@ -560,6 +574,11 @@ async function loadUserProfile(username) {
         document.getElementById('profile-username').textContent = user.username;
         document.getElementById('user-karma').textContent = `${user.karma} karma`;
         document.getElementById('user-created').textContent = `• member since ${new Date(user.createdAt).toLocaleDateString()}`;
+
+        // Load user's avatar
+        if (user.avatarUrl) {
+            document.getElementById('profile-avatar').src = user.avatarUrl;
+        }
 
         // Load user's bio
         if (user.bio) {

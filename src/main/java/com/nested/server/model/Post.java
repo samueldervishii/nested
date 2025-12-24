@@ -9,6 +9,8 @@ import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -36,6 +38,9 @@ public class Post {
     private String url;
 
     private String thumbnailUrl;
+
+    @Builder.Default
+    private List<String> imageUrls = new ArrayList<>();
 
     private PostType postType;
 

@@ -38,16 +38,38 @@
                 <!-- Profile Section -->
                 <div class="settings-section" style="margin-bottom: 30px; padding: 15px; background: #f6f6f6; border-radius: 4px;">
                     <h3 style="margin-bottom: 15px;">Profile</h3>
+
+                    <!-- Avatar Upload -->
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label>Avatar</label>
+                        <div style="display: flex; align-items: center; gap: 15px; margin-top: 8px;">
+                            <img id="avatar-preview" src="/images/default-avatar.svg" alt="Avatar preview"
+                                 style="width: 80px; height: 80px; border-radius: 4px; border: 2px solid #5f99cf; object-fit: cover;">
+                            <div>
+                                <input type="file" id="avatar-file" accept="image/jpeg,image/png,image/gif,image/webp"
+                                       style="display: none;">
+                                <button type="button" id="upload-avatar-btn" class="btn-secondary"
+                                        style="padding: 6px 12px; font-size: 12px; margin-bottom: 5px;">
+                                    Upload Image
+                                </button>
+                                <button type="button" id="delete-avatar-btn" class="btn-secondary"
+                                        style="padding: 6px 12px; font-size: 12px; background: #ff4444; color: white; display: none;">
+                                    Remove
+                                </button>
+                                <p style="font-size: 11px; color: #666; margin-top: 5px;">
+                                    Max 100KB. JPG, PNG, GIF, or WebP.
+                                </p>
+                            </div>
+                        </div>
+                        <div id="avatar-upload-status" style="margin-top: 8px;"></div>
+                    </div>
+
                     <form id="profile-form">
                         <div class="form-group">
                             <label for="bio">Bio</label>
                             <textarea id="bio" rows="4" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
                         </div>
-                        <div class="form-group">
-                            <label for="avatarUrl">Avatar URL</label>
-                            <input type="url" id="avatarUrl" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-                        </div>
-                        <button type="submit" class="btn-primary">Update Profile</button>
+                        <button type="submit" class="btn-primary">Update Bio</button>
                     </form>
                 </div>
 
@@ -88,19 +110,85 @@
 
             // Populate profile form
             document.getElementById('bio').value = user.bio || '';
-            document.getElementById('avatarUrl').value = user.avatarUrl || '';
 
-            // Profile form handler
+            // Set avatar preview
+            const avatarPreview = document.getElementById('avatar-preview');
+            const deleteAvatarBtn = document.getElementById('delete-avatar-btn');
+            if (user.avatarUrl && user.avatarUrl !== '') {
+                avatarPreview.src = user.avatarUrl;
+                deleteAvatarBtn.style.display = 'inline-block';
+            }
+
+            // Avatar upload button click
+            document.getElementById('upload-avatar-btn').addEventListener('click', () => {
+                document.getElementById('avatar-file').click();
+            });
+
+            // Avatar file selection
+            document.getElementById('avatar-file').addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const statusDiv = document.getElementById('avatar-upload-status');
+                statusDiv.innerHTML = '<span style="color: #666;">Uploading...</span>';
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch('/api/users/me/avatar', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || 'Upload failed');
+                    }
+
+                    const result = await response.json();
+                    avatarPreview.src = result.avatarUrl;
+                    deleteAvatarBtn.style.display = 'inline-block';
+                    statusDiv.innerHTML = '<span style="color: green;">Avatar updated!</span>';
+                    setTimeout(() => statusDiv.innerHTML = '', 3000);
+                } catch (error) {
+                    statusDiv.innerHTML = `<span style="color: red;">${error.message}</span>`;
+                }
+            });
+
+            // Delete avatar
+            deleteAvatarBtn.addEventListener('click', async () => {
+                const statusDiv = document.getElementById('avatar-upload-status');
+                try {
+                    const response = await fetch('/api/users/me/avatar', {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to delete avatar');
+                    }
+
+                    avatarPreview.src = '/images/default-avatar.svg';
+                    deleteAvatarBtn.style.display = 'none';
+                    statusDiv.innerHTML = '<span style="color: green;">Avatar removed!</span>';
+                    setTimeout(() => statusDiv.innerHTML = '', 3000);
+                } catch (error) {
+                    statusDiv.innerHTML = `<span style="color: red;">${error.message}</span>`;
+                }
+            });
+
+            // Profile form handler (bio only now)
             document.getElementById('profile-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const bio = document.getElementById('bio').value;
-                const avatarUrl = document.getElementById('avatarUrl').value;
 
                 try {
-                    await api.updateProfile({ bio, avatarUrl });
-                    showMessage('Profile updated successfully!', 'success');
+                    await api.updateProfile({ bio });
+                    showMessage('Bio updated successfully!', 'success');
                 } catch (error) {
-                    showMessage('Failed to update profile: ' + error.message, 'error');
+                    showMessage('Failed to update bio: ' + error.message, 'error');
                 }
             });
 

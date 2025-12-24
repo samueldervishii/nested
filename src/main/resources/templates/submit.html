@@ -121,6 +121,57 @@
             color: #888;
             text-align: center;
         }
+        .image-upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .image-upload-area:hover {
+            border-color: #5f99cf;
+        }
+        .image-upload-area.dragover {
+            border-color: #ff6b35;
+            background: #fff8f5;
+        }
+        .image-previews {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .image-preview {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .image-preview .remove-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 22px;
+            height: 22px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 20px;
+        }
+        .upload-status {
+            font-size: 12px;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -149,6 +200,7 @@
             <div class="submit-tabs">
                 <div class="submit-tab active" data-tab="link">Link</div>
                 <div class="submit-tab" data-tab="text">Text</div>
+                <div class="submit-tab" data-tab="image">Image</div>
             </div>
 
             <form id="submit-form">
@@ -168,6 +220,23 @@
                     <div class="form-group">
                         <label for="content">Text (optional)</label>
                         <textarea id="content" name="content" rows="6" placeholder="What's on your mind?"></textarea>
+                    </div>
+                </div>
+
+                <div id="image-tab" class="tab-content">
+                    <div class="form-group">
+                        <label>Upload Images (max 100KB each)</label>
+                        <div class="image-upload-area" id="image-upload-area">
+                            <input type="file" id="image-input" accept="image/jpeg,image/png,image/gif,image/webp" multiple style="display: none;">
+                            <p style="margin: 0; color: #666;">Click or drag images here</p>
+                            <p style="margin: 5px 0 0; font-size: 12px; color: #999;">JPG, PNG, GIF, WebP - Max 100KB per image</p>
+                        </div>
+                        <div class="image-previews" id="image-previews"></div>
+                        <div class="upload-status" id="upload-status"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="image-caption">Caption (optional)</label>
+                        <textarea id="image-caption" name="image-caption" rows="3" placeholder="Add a caption to your image post"></textarea>
                     </div>
                 </div>
 
@@ -199,6 +268,7 @@
         let currentType = 'LINK';
         let selectedCommunity = null;
         let searchTimeout = null;
+        let uploadedImages = []; // Array of {url: string, file: File}
 
         // Tab switching
         document.querySelectorAll('.submit-tab').forEach(tab => {
@@ -207,13 +277,97 @@
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                 tab.classList.add('active');
                 document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
-                currentType = tab.dataset.tab === 'text' ? 'TEXT' : 'LINK';
+                if (tab.dataset.tab === 'text') {
+                    currentType = 'TEXT';
+                } else if (tab.dataset.tab === 'image') {
+                    currentType = 'IMAGE';
+                } else {
+                    currentType = 'LINK';
+                }
             });
         });
 
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('type') === 'text') {
             document.querySelector('[data-tab="text"]').click();
+        } else if (urlParams.get('type') === 'image') {
+            document.querySelector('[data-tab="image"]').click();
+        }
+
+        // Image upload functionality
+        const imageUploadArea = document.getElementById('image-upload-area');
+        const imageInput = document.getElementById('image-input');
+        const imagePreviews = document.getElementById('image-previews');
+        const uploadStatus = document.getElementById('upload-status');
+
+        imageUploadArea.addEventListener('click', () => imageInput.click());
+
+        imageUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageUploadArea.classList.add('dragover');
+        });
+
+        imageUploadArea.addEventListener('dragleave', () => {
+            imageUploadArea.classList.remove('dragover');
+        });
+
+        imageUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageUploadArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        async function handleFiles(files) {
+            for (const file of files) {
+                if (!file.type.startsWith('image/')) {
+                    uploadStatus.innerHTML = '<span style="color: red;">Only image files allowed</span>';
+                    continue;
+                }
+
+                uploadStatus.innerHTML = '<span style="color: #666;">Uploading...</span>';
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch('/api/images/post', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.message || 'Upload failed');
+                    }
+
+                    const result = await response.json();
+                    uploadedImages.push({ url: result.imageUrl, file: file });
+                    renderImagePreviews();
+                    uploadStatus.innerHTML = '<span style="color: green;">Uploaded!</span>';
+                    setTimeout(() => uploadStatus.innerHTML = '', 2000);
+                } catch (error) {
+                    uploadStatus.innerHTML = `<span style="color: red;">${error.message}</span>`;
+                }
+            }
+        }
+
+        function renderImagePreviews() {
+            imagePreviews.innerHTML = uploadedImages.map((img, index) => `
+                <div class="image-preview">
+                    <img src="${img.url}" alt="Preview">
+                    <button type="button" class="remove-btn" onclick="removeImage(${index})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function removeImage(index) {
+            uploadedImages.splice(index, 1);
+            renderImagePreviews();
         }
 
         // Auth check
@@ -310,6 +464,14 @@
 
             if (currentType === 'LINK') {
                 data.url = document.getElementById('url').value;
+            } else if (currentType === 'IMAGE') {
+                if (uploadedImages.length === 0) {
+                    document.getElementById('error-message').textContent = 'Please upload at least one image';
+                    document.getElementById('error-message').style.display = 'block';
+                    return;
+                }
+                data.imageUrls = uploadedImages.map(img => img.url);
+                data.content = document.getElementById('image-caption').value;
             } else {
                 data.content = document.getElementById('content').value;
             }
