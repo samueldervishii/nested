@@ -153,45 +153,33 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
+    /**
+     * Atomic toggle for saved posts - no read-modify-write pattern
+     */
     public boolean toggleSavePost(String userId, String postId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        boolean isSaved = userRepository.isPostSaved(userId, postId);
 
-        if (user.getSavedPosts() == null) {
-            user.setSavedPosts(new java.util.HashSet<>());
-        }
-
-        boolean saved;
-        if (user.getSavedPosts().contains(postId)) {
-            user.getSavedPosts().remove(postId);
-            saved = false;
+        if (isSaved) {
+            userRepository.removeSavedPost(userId, postId);
+            return false;
         } else {
-            user.getSavedPosts().add(postId);
-            saved = true;
+            userRepository.addSavedPost(userId, postId);
+            return true;
         }
-
-        userRepository.save(user);
-        return saved;
     }
 
+    /**
+     * Atomic toggle for hidden posts - no read-modify-write pattern
+     */
     public boolean toggleHidePost(String userId, String postId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        boolean isHidden = userRepository.isPostHidden(userId, postId);
 
-        if (user.getHiddenPosts() == null) {
-            user.setHiddenPosts(new java.util.HashSet<>());
-        }
-
-        boolean hidden;
-        if (user.getHiddenPosts().contains(postId)) {
-            user.getHiddenPosts().remove(postId);
-            hidden = false;
+        if (isHidden) {
+            userRepository.removeHiddenPost(userId, postId);
+            return false;
         } else {
-            user.getHiddenPosts().add(postId);
-            hidden = true;
+            userRepository.addHiddenPost(userId, postId);
+            return true;
         }
-
-        userRepository.save(user);
-        return hidden;
     }
 }

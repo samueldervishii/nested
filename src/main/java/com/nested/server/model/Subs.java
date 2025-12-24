@@ -32,6 +32,7 @@ public class Subs {
 
     private String iconUrl;
 
+    @Indexed
     private String creatorId;
 
     private String creatorUsername;

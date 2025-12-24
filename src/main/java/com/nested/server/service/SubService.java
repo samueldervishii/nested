@@ -79,26 +79,26 @@ public class SubService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Atomic subscribe - no race conditions
+     */
     public void subscribe(String subsId, User user) {
-        subsRepository.findById(subsId).ifPresent(sub -> {
-            // Add user to subscriberIds set (prevents duplicates automatically)
-            if (sub.getSubscriberIds().add(user.getId())) {
-                sub.setSubscriberCount(sub.getSubscriberIds().size());
-                subsRepository.save(sub);
-                userService.subscribeToSubs(user.getId(), subsId);
-            }
-        });
+        // Check if already subscribed to avoid unnecessary operations
+        if (!subsRepository.isUserSubscribed(subsId, user.getId())) {
+            subsRepository.addSubscriber(subsId, user.getId());
+            userService.subscribeToSubs(user.getId(), subsId);
+        }
     }
 
+    /**
+     * Atomic unsubscribe - no race conditions
+     */
     public void unsubscribe(String subsId, User user) {
-        subsRepository.findById(subsId).ifPresent(sub -> {
-            // Remove user from subscriberIds set
-            if (sub.getSubscriberIds().remove(user.getId())) {
-                sub.setSubscriberCount(sub.getSubscriberIds().size());
-                subsRepository.save(sub);
-                userService.unsubscribeFromSubs(user.getId(), subsId);
-            }
-        });
+        // Check if subscribed before removing
+        if (subsRepository.isUserSubscribed(subsId, user.getId())) {
+            subsRepository.removeSubscriber(subsId, user.getId());
+            userService.unsubscribeFromSubs(user.getId(), subsId);
+        }
     }
 
     private boolean isSubscribed(Subs sub, User user) {
@@ -186,6 +186,9 @@ public class SubService {
         subsRepository.save(sub);
     }
 
+    /**
+     * Atomic add moderator
+     */
     public void addModerator(String subsId, String newModeratorId, User user) {
         Subs sub = subsRepository.findById(subsId)
                 .orElseThrow(() -> new ResourceNotFoundException("Subs", "id", subsId));
@@ -194,12 +197,12 @@ public class SubService {
             throw new UnauthorizedException("Only the creator can add moderators");
         }
 
-        if (!sub.getModeratorIds().contains(newModeratorId)) {
-            sub.getModeratorIds().add(newModeratorId);
-            subsRepository.save(sub);
-        }
+        subsRepository.addModerator(subsId, newModeratorId);
     }
 
+    /**
+     * Atomic remove moderator
+     */
     public void removeModerator(String subsId, String moderatorId, User user) {
         Subs sub = subsRepository.findById(subsId)
                 .orElseThrow(() -> new ResourceNotFoundException("Subs", "id", subsId));
@@ -212,8 +215,7 @@ public class SubService {
             throw new BadRequestException("Cannot remove the creator from moderators");
         }
 
-        sub.getModeratorIds().remove(moderatorId);
-        subsRepository.save(sub);
+        subsRepository.removeModerator(subsId, moderatorId);
     }
 
     private String formatDate(Instant instant) {

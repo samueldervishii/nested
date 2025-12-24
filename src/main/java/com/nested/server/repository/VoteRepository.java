@@ -2,6 +2,8 @@ package com.nested.server.repository;
 
 import com.nested.server.model.Vote;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.Update;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,4 +16,10 @@ public interface VoteRepository extends MongoRepository<Vote, String> {
 
     List<Vote> findByUserIdAndTargetIdIn(String userId, List<String> targetIds);
 
+    /**
+     * Atomic vote type update
+     */
+    @Query("{ '_id': ?0 }")
+    @Update("{ '$set': { 'voteType': ?1 } }")
+    void updateVoteType(String voteId, Vote.VoteType voteType);
 }

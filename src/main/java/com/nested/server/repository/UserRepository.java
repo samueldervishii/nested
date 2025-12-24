@@ -42,4 +42,44 @@ public interface UserRepository extends MongoRepository<User, String> {
     @Query("{ '_id': ?0 }")
     @Update("{ '$pull': { 'subscribedSubs': ?1 } }")
     void removeSubscription(String userId, String subsId);
+
+    /**
+     * Add saved post atomically using $addToSet (prevents duplicates)
+     */
+    @Query("{ '_id': ?0 }")
+    @Update("{ '$addToSet': { 'savedPosts': ?1 } }")
+    void addSavedPost(String userId, String postId);
+
+    /**
+     * Remove saved post atomically using $pull
+     */
+    @Query("{ '_id': ?0 }")
+    @Update("{ '$pull': { 'savedPosts': ?1 } }")
+    void removeSavedPost(String userId, String postId);
+
+    /**
+     * Add hidden post atomically using $addToSet (prevents duplicates)
+     */
+    @Query("{ '_id': ?0 }")
+    @Update("{ '$addToSet': { 'hiddenPosts': ?1 } }")
+    void addHiddenPost(String userId, String postId);
+
+    /**
+     * Remove hidden post atomically using $pull
+     */
+    @Query("{ '_id': ?0 }")
+    @Update("{ '$pull': { 'hiddenPosts': ?1 } }")
+    void removeHiddenPost(String userId, String postId);
+
+    /**
+     * Check if a post is saved (projection query for efficiency)
+     */
+    @Query(value = "{ '_id': ?0, 'savedPosts': ?1 }", exists = true)
+    boolean isPostSaved(String userId, String postId);
+
+    /**
+     * Check if a post is hidden (projection query for efficiency)
+     */
+    @Query(value = "{ '_id': ?0, 'hiddenPosts': ?1 }", exists = true)
+    boolean isPostHidden(String userId, String postId);
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -51,4 +52,16 @@ public interface PostRepository extends MongoRepository<Post, String> {
     @Query("{ '_id': ?0 }")
     @Update("{ '$inc': { 'commentCount': ?1 } }")
     void incrementCommentCount(String postId, int delta);
+
+    /**
+     * Projection query for vote operations - only fetches authorId and voteCount
+     */
+    @Query(value = "{ '_id': ?0 }", fields = "{ 'authorId': 1, 'voteCount': 1 }")
+    Optional<Post> findAuthorIdAndVoteCountById(String postId);
+
+    /**
+     * Lightweight projection for post lists - excludes large fields like content and imageUrls
+     */
+    @Query(value = "{}", fields = "{ 'content': 0, 'imageUrls': 0 }")
+    List<Post> findAllProjectedForList();
 }

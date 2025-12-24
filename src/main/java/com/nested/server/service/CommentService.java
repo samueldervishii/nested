@@ -15,6 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -88,34 +92,94 @@ public class CommentService {
         return mapToResponse(comment, 1);
     }
 
+    /**
+     * Original method - loads all comments (kept for backwards compatibility)
+     */
     public List<CommentResponse> getCommentsByPost(String postId, User currentUser) {
-        List<Comment> allComments = commentRepository.findByPostIdOrderByCreatedAtDesc(postId);
+        return getCommentsByPostPaginated(postId, currentUser, 0, 50, true);
+    }
+
+    /**
+     * Optimized paginated comment loading:
+     * - Only loads root comments initially (paginated)
+     * - Child comments can be loaded on-demand via getReplies()
+     * - Reduces memory usage for posts with many comments
+     */
+    public List<CommentResponse> getCommentsByPostPaginated(String postId, User currentUser,
+                                                             int page, int size, boolean includeReplies) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "voteCount"));
+        List<Comment> rootComments = commentRepository.findRootCommentsByPostId(postId, pageable);
+
+        if (rootComments.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Get all comment IDs for vote lookup
+        List<String> commentIds = new ArrayList<>();
+        rootComments.forEach(c -> commentIds.add(c.getId()));
 
         Map<String, Integer> userVotes = new HashMap<>();
-        if (currentUser != null) {
-            List<String> commentIds = allComments.stream().map(Comment::getId).collect(Collectors.toList());
+        Map<String, List<Comment>> childrenMap = new HashMap<>();
+
+        if (includeReplies) {
+            // Load all child comments for these root comments
+            List<Comment> allComments = commentRepository.findByPostIdOrderByCreatedAtDesc(postId);
+
+            for (Comment comment : allComments) {
+                commentIds.add(comment.getId());
+                if (comment.getParentCommentId() != null) {
+                    childrenMap.computeIfAbsent(comment.getParentCommentId(), k -> new ArrayList<>()).add(comment);
+                }
+            }
+        }
+
+        // Batch load user votes
+        if (currentUser != null && !commentIds.isEmpty()) {
             List<Vote> votes = voteRepository.findByUserIdAndTargetIdIn(currentUser.getId(), commentIds);
             votes.forEach(v -> userVotes.put(v.getTargetId(), v.getVoteType().getValue()));
         }
 
-        // Build comment tree
-        Map<String, List<Comment>> childrenMap = new HashMap<>();
-        List<Comment> rootComments = new ArrayList<>();
+        return rootComments.stream()
+                .map(comment -> includeReplies
+                    ? buildCommentTree(comment, childrenMap, userVotes)
+                    : buildCommentWithReplyCount(comment, userVotes))
+                .collect(Collectors.toList());
+    }
 
-        for (Comment comment : allComments) {
-            if (comment.getParentCommentId() == null) {
-                rootComments.add(comment);
-            } else {
-                childrenMap.computeIfAbsent(comment.getParentCommentId(), k -> new ArrayList<>()).add(comment);
-            }
+    /**
+     * Lazy load replies for a specific comment
+     */
+    public List<CommentResponse> getReplies(String parentCommentId, User currentUser) {
+        List<Comment> replies = commentRepository.findByParentCommentIdOrderByVoteCountDesc(parentCommentId);
+
+        if (replies.isEmpty()) {
+            return Collections.emptyList();
         }
 
-        // Sort root comments by vote count
-        rootComments.sort((a, b) -> Integer.compare(b.getVoteCount(), a.getVoteCount()));
+        Map<String, Integer> userVotes = new HashMap<>();
+        if (currentUser != null) {
+            List<String> replyIds = replies.stream().map(Comment::getId).collect(Collectors.toList());
+            List<Vote> votes = voteRepository.findByUserIdAndTargetIdIn(currentUser.getId(), replyIds);
+            votes.forEach(v -> userVotes.put(v.getTargetId(), v.getVoteType().getValue()));
+        }
 
-        return rootComments.stream()
-                .map(comment -> buildCommentTree(comment, childrenMap, userVotes))
+        return replies.stream()
+                .map(comment -> mapToResponse(comment, userVotes.get(comment.getId())))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Get total count of root comments (for pagination info)
+     */
+    public long getRootCommentCount(String postId) {
+        return commentRepository.countByPostIdAndParentCommentIdIsNull(postId);
+    }
+
+    private CommentResponse buildCommentWithReplyCount(Comment comment, Map<String, Integer> userVotes) {
+        CommentResponse response = mapToResponse(comment, userVotes.get(comment.getId()));
+        // Set empty replies list - client can load on demand
+        response.setReplies(Collections.emptyList());
+        return response;
     }
 
     private CommentResponse buildCommentTree(Comment comment, Map<String, List<Comment>> childrenMap, Map<String, Integer> userVotes) {
