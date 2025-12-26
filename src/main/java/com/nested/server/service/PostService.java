@@ -82,6 +82,10 @@ public class PostService {
 
         if (user != null && !user.getSubscribedSubs().isEmpty()) {
             posts = postRepository.findBySubIdIn(user.getSubscribedSubs(), pageable);
+            // Fall back to all posts if subscribed feed is empty
+            if (posts.isEmpty()) {
+                posts = postRepository.findAll(pageable);
+            }
         } else {
             posts = postRepository.findAll(pageable);
         }
@@ -125,8 +129,12 @@ public class PostService {
     }
 
     public List<PostResponse> getHotPosts(User user) {
-        Instant since = Instant.now().minus(Duration.ofDays(1));
+        // Hot posts from last 7 days, sorted by votes (fallback to all posts if empty)
+        Instant since = Instant.now().minus(Duration.ofDays(7));
         List<Post> posts = postRepository.findTop100ByCreatedAtAfterOrderByVoteCountDesc(since);
+        if (posts.isEmpty()) {
+            posts = postRepository.findTop100ByOrderByVoteCountDesc();
+        }
         return mapPostsWithUserVotes(posts, user);
     }
 

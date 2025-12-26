@@ -6,10 +6,21 @@
     <title id="page-title">Community - nested</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" type="image/png" href="/images/nested-icon.svg">
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('.logo img').forEach(function(logo) {
+                    logo.src = theme === 'dark' ? '/images/nested-logo-dark.svg' : '/images/nested-logo.svg';
+                });
+            });
+        })();
+    </script>
 </head>
 <body>
     <div class="header-top">
-        <a href="/">MY COMMUNITIES</a>
+        <a href="/my-communities">MY COMMUNITIES</a>
         <a href="/">HOME</a>
         <a href="/c/popular">POPULAR</a>
         <a href="/c/all">ALL</a>

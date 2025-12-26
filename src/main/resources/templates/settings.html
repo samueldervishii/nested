@@ -6,11 +6,22 @@
     <title>Settings - nested</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" type="image/png" href="/images/nested-icon.svg">
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('.logo img').forEach(function(logo) {
+                    logo.src = theme === 'dark' ? '/images/nested-logo-dark.svg' : '/images/nested-logo.svg';
+                });
+            });
+        })();
+    </script>
 </head>
 <body>
     <!-- Header Top Bar -->
     <div class="header-top">
-        <a href="/">MY COMMUNITIES</a>
+        <a href="/my-communities">MY COMMUNITIES</a>
         <a href="/">HOME</a>
         <a href="/c/popular">POPULAR</a>
         <a href="/c/all">ALL</a>
@@ -34,9 +45,10 @@
         <main class="content">
             <div class="form-container" style="max-width: 600px;">
                 <h2>Account Settings</h2>
+                <hr style="border: none; border-top: 1px solid var(--border-color, #ddd); margin: 20px 0;">
 
                 <!-- Profile Section -->
-                <div class="settings-section" style="margin-bottom: 30px; padding: 15px; background: #f6f6f6; border-radius: 4px;">
+                <div class="settings-section" style="margin-bottom: 30px; padding: 15px; background: var(--bg-tertiary, #f6f6f6); border-radius: 4px;">
                     <h3 style="margin-bottom: 15px;">Profile</h3>
 
                     <!-- Avatar Upload -->
@@ -73,8 +85,80 @@
                     </form>
                 </div>
 
+                <hr style="border: none; border-top: 1px solid var(--border-color, #ddd); margin: 25px 0;">
+
+                <!-- Two-Factor Authentication Section -->
+                <div class="settings-section" id="2fa-section" style="margin-bottom: 30px; padding: 15px; background: #f6f6f6; border-radius: 4px;">
+                    <h3 style="margin-bottom: 15px;">Two-Factor Authentication</h3>
+                    <p style="color: #666; font-size: 13px; margin-bottom: 15px;">
+                        Add an extra layer of security to your account using an authenticator app like Google Authenticator or Microsoft Authenticator.
+                    </p>
+
+                    <!-- 2FA Status -->
+                    <div id="2fa-status" style="margin-bottom: 15px;">
+                        <span id="2fa-badge" style="display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                            Loading...
+                        </span>
+                    </div>
+
+                    <!-- Enable 2FA Button (shown when disabled) -->
+                    <div id="2fa-enable-container">
+                        <button type="button" id="setup-2fa-btn" class="btn-primary" style="background: #28a745;">
+                            Enable 2FA
+                        </button>
+                    </div>
+
+                    <!-- Disable 2FA Form (shown when enabled) -->
+                    <div id="2fa-disable-container" style="display: none;">
+                        <p style="color: #666; font-size: 13px; margin-bottom: 10px;">
+                            Enter your authenticator code to disable 2FA:
+                        </p>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="text" id="disable-2fa-code" maxlength="6" pattern="[0-9]{6}"
+                                   placeholder="000000" style="width: 120px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-size: 18px; letter-spacing: 4px;">
+                            <button type="button" id="disable-2fa-btn" class="btn-secondary" style="background: #dc3545; color: white; border: none;">
+                                Disable 2FA
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2FA Setup Modal -->
+                    <div id="2fa-setup-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+                        <div style="background: white; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%; text-align: center;">
+                            <h3 style="margin-bottom: 20px;">Set Up 2FA</h3>
+                            <p style="color: #666; font-size: 13px; margin-bottom: 15px;">
+                                Scan this QR code with your authenticator app:
+                            </p>
+                            <img id="2fa-qr-code" src="" alt="QR Code" style="max-width: 200px; margin-bottom: 15px;">
+                            <p style="font-size: 12px; color: #888; margin-bottom: 10px;">
+                                Or enter this code manually:
+                            </p>
+                            <code id="2fa-manual-key" style="display: block; background: #f5f5f5; padding: 10px; border-radius: 4px; font-size: 14px; letter-spacing: 2px; margin-bottom: 20px;"></code>
+                            <input type="hidden" id="2fa-secret">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-size: 13px;">Enter code from app:</label>
+                                <input type="text" id="verify-2fa-code" maxlength="6" pattern="[0-9]{6}"
+                                       placeholder="000000" style="width: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-size: 20px; letter-spacing: 4px;">
+                            </div>
+                            <div style="display: flex; gap: 10px; justify-content: center;">
+                                <button type="button" id="verify-2fa-btn" class="btn-primary" style="background: #28a745;">
+                                    Verify & Enable
+                                </button>
+                                <button type="button" id="cancel-2fa-btn" class="btn-secondary">
+                                    Cancel
+                                </button>
+                            </div>
+                            <div id="2fa-setup-error" style="color: red; margin-top: 10px; font-size: 13px;"></div>
+                        </div>
+                    </div>
+
+                    <div id="2fa-message" style="margin-top: 10px;"></div>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid var(--border-color, #ddd); margin: 25px 0;">
+
                 <!-- Password Section -->
-                <div class="settings-section" style="padding: 15px; background: #f6f6f6; border-radius: 4px;">
+                <div class="settings-section" style="padding: 15px; background: var(--bg-tertiary, #f6f6f6); border-radius: 4px;">
                     <h3 style="margin-bottom: 15px;">Change Password</h3>
                     <form id="password-form">
                         <div class="form-group">
@@ -217,6 +301,99 @@
         function showMessage(text, type) {
             const msgDiv = document.getElementById('settings-message');
             msgDiv.innerHTML = `<p style="color: ${type === 'error' ? 'red' : 'green'}; padding: 10px; background: ${type === 'error' ? '#ffeeee' : '#eeffee'}; border-radius: 4px;">${text}</p>`;
+        }
+
+        // 2FA Functionality
+        function update2FAStatus(enabled) {
+            const badge = document.getElementById('2fa-badge');
+            const enableContainer = document.getElementById('2fa-enable-container');
+            const disableContainer = document.getElementById('2fa-disable-container');
+
+            if (enabled) {
+                badge.textContent = 'Enabled';
+                badge.style.background = '#d4edda';
+                badge.style.color = '#155724';
+                enableContainer.style.display = 'none';
+                disableContainer.style.display = 'block';
+            } else {
+                badge.textContent = 'Disabled';
+                badge.style.background = '#f8d7da';
+                badge.style.color = '#721c24';
+                enableContainer.style.display = 'block';
+                disableContainer.style.display = 'none';
+            }
+        }
+
+        // Initialize 2FA status
+        api.get2FAStatus().then(status => {
+            update2FAStatus(status.enabled);
+        }).catch(() => {
+            update2FAStatus(false);
+        });
+
+        // Setup 2FA button
+        document.getElementById('setup-2fa-btn').addEventListener('click', async () => {
+            try {
+                const setup = await api.setup2FA();
+                document.getElementById('2fa-qr-code').src = setup.qrCodeDataUrl;
+                document.getElementById('2fa-manual-key').textContent = setup.manualEntryKey;
+                document.getElementById('2fa-secret').value = setup.secret;
+                document.getElementById('verify-2fa-code').value = '';
+                document.getElementById('2fa-setup-error').textContent = '';
+                document.getElementById('2fa-setup-modal').style.display = 'flex';
+            } catch (error) {
+                show2FAMessage('Failed to setup 2FA: ' + error.message, 'error');
+            }
+        });
+
+        // Cancel 2FA setup
+        document.getElementById('cancel-2fa-btn').addEventListener('click', () => {
+            document.getElementById('2fa-setup-modal').style.display = 'none';
+        });
+
+        // Verify and enable 2FA
+        document.getElementById('verify-2fa-btn').addEventListener('click', async () => {
+            const secret = document.getElementById('2fa-secret').value;
+            const code = document.getElementById('verify-2fa-code').value;
+
+            if (!code || code.length !== 6) {
+                document.getElementById('2fa-setup-error').textContent = 'Please enter a 6-digit code';
+                return;
+            }
+
+            try {
+                await api.enable2FA(secret, code);
+                document.getElementById('2fa-setup-modal').style.display = 'none';
+                update2FAStatus(true);
+                show2FAMessage('2FA has been enabled successfully!', 'success');
+            } catch (error) {
+                document.getElementById('2fa-setup-error').textContent = error.message;
+            }
+        });
+
+        // Disable 2FA
+        document.getElementById('disable-2fa-btn').addEventListener('click', async () => {
+            const code = document.getElementById('disable-2fa-code').value;
+
+            if (!code || code.length !== 6) {
+                show2FAMessage('Please enter a 6-digit code', 'error');
+                return;
+            }
+
+            try {
+                await api.disable2FA(code);
+                update2FAStatus(false);
+                document.getElementById('disable-2fa-code').value = '';
+                show2FAMessage('2FA has been disabled', 'success');
+            } catch (error) {
+                show2FAMessage('Failed to disable 2FA: ' + error.message, 'error');
+            }
+        });
+
+        function show2FAMessage(text, type) {
+            const msgDiv = document.getElementById('2fa-message');
+            msgDiv.innerHTML = `<p style="color: ${type === 'error' ? 'red' : 'green'}; font-size: 13px;">${text}</p>`;
+            setTimeout(() => msgDiv.innerHTML = '', 5000);
         }
     </script>
 </body>

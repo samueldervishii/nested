@@ -9,13 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse {
-    private String token;
-    private String username;
-    private String userId;
+public class TwoFactorStatusResponse {
+    private boolean enabled;
     private String message;
-
-    // 2FA fields
-    @Builder.Default
-    private boolean requiresTwoFactor = false;
 }

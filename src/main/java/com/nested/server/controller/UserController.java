@@ -30,17 +30,18 @@ public class UserController {
         User user = userService.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return ResponseEntity.ok(Map.of(
-                "authenticated", true,
-                "id", user.getId(),
-                "username", user.getUsername(),
-                "email", user.getEmail(),
-                "bio", user.getBio() != null ? user.getBio() : "",
-                "avatarUrl", user.getAvatarUrl() != null ? user.getAvatarUrl() : "",
-                "karma", user.getKarma(),
-                "createdAt", user.getCreatedAt().toString(),
-                "savedPosts", user.getSavedPosts() != null ? user.getSavedPosts() : java.util.Set.of(),
-                "hiddenPosts", user.getHiddenPosts() != null ? user.getHiddenPosts() : java.util.Set.of()
+        return ResponseEntity.ok(Map.ofEntries(
+                Map.entry("authenticated", true),
+                Map.entry("id", user.getId()),
+                Map.entry("username", user.getUsername()),
+                Map.entry("email", user.getEmail()),
+                Map.entry("bio", user.getBio() != null ? user.getBio() : ""),
+                Map.entry("avatarUrl", user.getAvatarUrl() != null ? user.getAvatarUrl() : ""),
+                Map.entry("karma", user.getKarma()),
+                Map.entry("createdAt", user.getCreatedAt().toString()),
+                Map.entry("savedPosts", user.getSavedPosts() != null ? user.getSavedPosts() : java.util.Set.of()),
+                Map.entry("hiddenPosts", user.getHiddenPosts() != null ? user.getHiddenPosts() : java.util.Set.of()),
+                Map.entry("twoFactorEnabled", user.isTwoFactorEnabled())
         ));
     }
 

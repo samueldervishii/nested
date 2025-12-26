@@ -2,6 +2,12 @@
 // Authentication is handled via HttpOnly cookies - no localStorage token storage
 const api = {
     baseUrl: '/api',
+    debug: false, // Set to true for development logging
+    defaultTimeout: 15000, // 15 seconds
+
+    log(...args) {
+        if (this.debug) console.log('[API]', ...args);
+    },
 
     async request(endpoint, options = {}) {
         const headers = {
@@ -10,21 +16,27 @@ const api = {
         };
 
         const method = options.method || 'GET';
-        console.log(`[API] ${method} ${endpoint}`);
+        this.log(`${method} ${endpoint}`);
+
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeout = options.timeout || this.defaultTimeout;
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
 
         try {
             const response = await fetch(`${this.baseUrl}${endpoint}`, {
                 ...options,
                 headers,
-                credentials: 'include'  // Always send cookies with requests
+                credentials: 'include',
+                signal: controller.signal
             });
 
-            console.log(`[API] ${method} ${endpoint} -> ${response.status}`);
+            clearTimeout(timeoutId);
+            this.log(`${method} ${endpoint} -> ${response.status}`);
 
             if (!response.ok) {
                 // Redirect to login if unauthorized (401) or forbidden (403) for protected actions
                 if (response.status === 401 || response.status === 403) {
-                    // Only redirect for write operations (POST, PUT, DELETE) or protected endpoints
                     const isWriteOperation = options.method && options.method !== 'GET';
                     const isProtectedEndpoint = endpoint.includes('/me') ||
                                                endpoint.includes('/saved') ||
@@ -32,14 +44,12 @@ const api = {
                                                endpoint.includes('/unsubscribe');
 
                     if (isWriteOperation || isProtectedEndpoint) {
-                        console.warn(`[API] Auth required for ${endpoint}, redirecting to login`);
                         window.location.href = '/login';
                         return;
                     }
                 }
 
                 const error = await response.json().catch(() => ({ message: 'Request failed' }));
-                console.error(`[API] ${method} ${endpoint} failed:`, error.message || response.status);
                 throw new Error(error.message || `HTTP ${response.status}`);
             }
 
@@ -47,11 +57,12 @@ const api = {
                 return null;
             }
 
-            const data = await response.json();
-            console.log(`[API] ${method} ${endpoint} -> Success, data:`, Array.isArray(data) ? `${data.length} items` : 'object');
-            return data;
+            return await response.json();
         } catch (error) {
-            console.error(`[API] ${method} ${endpoint} error:`, error);
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                throw new Error('Request timed out. Please try again.');
+            }
             throw error;
         }
     },
@@ -280,5 +291,40 @@ const api = {
 
     async getCreatedSubs(username) {
         return this.request(`/users/${username}/created-subs`);
+    },
+
+    // Get user's subscribed communities
+    async getSubscriptions() {
+        return this.request('/subs/subscriptions');
+    },
+
+    // Two-Factor Authentication
+    async get2FAStatus() {
+        return this.request('/2fa/status');
+    },
+
+    async setup2FA() {
+        return this.request('/2fa/setup', { method: 'POST' });
+    },
+
+    async enable2FA(secret, code) {
+        return this.request('/2fa/enable', {
+            method: 'POST',
+            body: JSON.stringify({ secret, code })
+        });
+    },
+
+    async disable2FA(code) {
+        return this.request('/2fa/disable', {
+            method: 'POST',
+            body: JSON.stringify({ code })
+        });
+    },
+
+    async loginWith2FA(username, password, twoFactorCode) {
+        return this.request('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ username, password, twoFactorCode })
+        });
     }
 };

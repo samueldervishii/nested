@@ -6,14 +6,26 @@
     <title>Nested - Share and Discuss</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="icon" type="image/png" href="/images/nested-icon.svg">
+    <script>
+        // Initialize theme immediately to prevent flash
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            // Update logo based on theme
+            document.addEventListener('DOMContentLoaded', function() {
+                const logos = document.querySelectorAll('.logo img');
+                logos.forEach(function(logo) {
+                    logo.src = theme === 'dark' ? '/images/nested-logo-dark.svg' : '/images/nested-logo.svg';
+                });
+            });
+        })();
+    </script>
 </head>
 <body>
     <!-- Header Top Bar -->
     <div class="header-top">
-        <a href="/">MY COMMUNITIES</a>
+        <a href="/my-communities">MY COMMUNITIES</a>
         <a href="/">HOME</a>
-        <a href="/c/popular">POPULAR</a>
-        <a href="/c/all">ALL</a>
     </div>
 
     <!-- Main Header -->

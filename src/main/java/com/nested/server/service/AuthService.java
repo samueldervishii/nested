@@ -21,6 +21,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final TwoFactorService twoFactorService;
 
     public AuthResponse register(RegisterRequest request) {
         log.info("Registration attempt for username: {}, email: {}", request.getUsername(), request.getEmail());
@@ -70,6 +71,24 @@ public class AuthService {
         // Verify password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BadRequestException("Incorrect password");
+        }
+
+        // Check if 2FA is enabled
+        if (user.isTwoFactorEnabled()) {
+            // If no 2FA code provided, return response indicating 2FA is required
+            if (request.getTwoFactorCode() == null || request.getTwoFactorCode().isEmpty()) {
+                log.info("2FA required for user: {}", user.getUsername());
+                return AuthResponse.builder()
+                        .requiresTwoFactor(true)
+                        .username(user.getUsername())
+                        .message("2FA verification required")
+                        .build();
+            }
+
+            // Verify 2FA code
+            if (!twoFactorService.verifyCode(user.getTwoFactorSecret(), request.getTwoFactorCode())) {
+                throw new BadRequestException("Invalid 2FA code");
+            }
         }
 
         log.info("User logged in: {}", user.getUsername());

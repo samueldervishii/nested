@@ -3,9 +3,131 @@
 // Global state
 let currentUser = null;
 let currentSort = 'hot';
+const DEBUG = false; // Set to true for development
+
+// ============================================
+// Dark Mode Support
+// ============================================
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeToggle(savedTheme);
+    updateLogo(savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeToggle(newTheme);
+    updateLogo(newTheme);
+}
+
+function updateThemeToggle(theme) {
+    const toggleBtn = document.getElementById('theme-toggle');
+    if (toggleBtn) {
+        toggleBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+        toggleBtn.title = theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+    }
+}
+
+function updateLogo(theme) {
+    const logos = document.querySelectorAll('.logo img');
+    logos.forEach(logo => {
+        if (theme === 'dark') {
+            logo.src = '/images/nested-logo-dark.svg';
+        } else {
+            logo.src = '/images/nested-logo.svg';
+        }
+    });
+}
+
+// ============================================
+// Markdown Parser (Simple Implementation)
+// ============================================
+function parseMarkdown(text) {
+    if (!text) return '';
+
+    let html = escapeHtml(text);
+
+    // Code blocks (```code```) - must be before inline code
+    html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+
+    // Inline code (`code`)
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // Headers (### Header)
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+    // Bold (**text** or __text__)
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+
+    // Italic (*text* or _text_)
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+    // Strikethrough (~~text~~)
+    html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
+
+    // Blockquotes (> quote)
+    html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+    // Horizontal rule (---)
+    html = html.replace(/^---$/gm, '<hr>');
+
+    // Links [text](url)
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+    // Unordered lists (- item or * item)
+    html = html.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+
+    // Line breaks
+    html = html.replace(/\n\n/g, '</p><p>');
+    html = html.replace(/\n/g, '<br>');
+
+    // Wrap in paragraph if not already wrapped
+    if (!html.startsWith('<')) {
+        html = '<p>' + html + '</p>';
+    }
+
+    return html;
+}
+
+// Utility: Debounce function for search/inputs
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Utility: Prevent double-clicks on buttons
+function setLoading(element, loading) {
+    if (loading) {
+        element.disabled = true;
+        element.dataset.originalText = element.textContent;
+        element.style.opacity = '0.6';
+    } else {
+        element.disabled = false;
+        element.style.opacity = '1';
+    }
+}
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize theme first (prevents flash)
+    initTheme();
+
     // Load current user
     currentUser = await api.getCurrentUser();
     updateAuthArea();
@@ -34,6 +156,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (path === '/c/all') {
         loadAllFeed();
         loadPopularsub();
+    } else if (path === '/my-communities') {
+        loadMyCommunities();
     } else if (path === '/' || path === '') {
         loadHomeFeed();
         loadPopularsub();
@@ -45,6 +169,8 @@ function updateAuthArea() {
     const authArea = document.getElementById('auth-area');
     if (!authArea) return;
 
+    const themeToggle = '<button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">🌙</button>';
+
     if (currentUser && currentUser.authenticated) {
         authArea.innerHTML = `
             <span class="user-info">
@@ -54,12 +180,17 @@ function updateAuthArea() {
             <a href="/saved">saved</a>
             <a href="/settings">settings</a>
             <a href="#" onclick="api.logout(); return false;">logout</a>
+            ${themeToggle}
         `;
     } else {
         authArea.innerHTML = `
             <a href="/login">login</a> or <a href="/register">register</a>
+            ${themeToggle}
         `;
     }
+
+    // Update toggle button state
+    updateThemeToggle(localStorage.getItem('theme') || 'light');
 }
 
 // Setup sort tabs
@@ -103,7 +234,6 @@ async function loadHomeFeed() {
     const postList = document.getElementById('post-list');
     if (!postList) return;
 
-    console.log('[App] Loading home feed, sort:', currentSort);
     postList.innerHTML = '<div class="loading">Loading posts...</div>';
 
     try {
@@ -118,10 +248,8 @@ async function loadHomeFeed() {
             default:
                 posts = await api.getHotPosts();
         }
-        console.log('[App] Loaded', posts.length, 'posts');
         renderPosts(posts, postList);
     } catch (error) {
-        console.error('[App] Failed to load home feed:', error);
         postList.innerHTML = '<div class="loading">Failed to load posts. <a href="/">Try again</a></div>';
     }
 }
@@ -161,11 +289,8 @@ async function loadPopularsub() {
     const container = document.getElementById('popular-sub');
     if (!container) return;
 
-    console.log('[App] Loading popular communities...');
-
     try {
         const communities = await api.getPopularSubs();
-        console.log('[App] Loaded communities:', communities);
 
         if (communities.length === 0) {
             container.innerHTML = '<p style="font-size: 12px; color: #888;">No communities yet. <a href="sub/create">Create one!</a></p>';
@@ -179,8 +304,123 @@ async function loadPopularsub() {
             </div>
         `).join('');
     } catch (error) {
-        console.error('[App] Failed to load popular communities:', error);
         container.innerHTML = '<p style="color: #888; font-size: 12px;">Failed to load</p>';
+    }
+}
+
+// Load my communities page
+async function loadMyCommunities() {
+    const ownedContainer = document.getElementById('owned-communities');
+    const subscribedContainer = document.getElementById('subscribed-communities');
+
+    if (!currentUser || !currentUser.authenticated) {
+        if (ownedContainer) {
+            ownedContainer.innerHTML = '<div class="empty-state"><p>Please <a href="/login">login</a> to see your communities.</p></div>';
+        }
+        if (subscribedContainer) {
+            subscribedContainer.innerHTML = '';
+            document.getElementById('subscribed-section').style.display = 'none';
+        }
+        return;
+    }
+
+    let ownedSubIds = new Set();
+
+    // Load owned/created communities first
+    if (ownedContainer) {
+        try {
+            const createdSubs = await api.getCreatedSubs(currentUser.username);
+            // Store owned sub IDs to filter from subscriptions
+            createdSubs.forEach(sub => ownedSubIds.add(sub.id));
+
+            if (createdSubs.length === 0) {
+                ownedContainer.innerHTML = '<div class="empty-state"><p>You haven\'t created any communities yet.</p><a href="/sub/create">Create your first community</a></div>';
+            } else {
+                ownedContainer.innerHTML = createdSubs.map(sub => renderCommunityCard(sub, true)).join('');
+            }
+        } catch (error) {
+            console.error('Failed to load created communities:', error);
+            ownedContainer.innerHTML = '<div class="empty-state"><p>Failed to load communities.</p></div>';
+        }
+    }
+
+    // Load subscribed communities (excluding owned ones)
+    if (subscribedContainer) {
+        try {
+            const subscribedSubs = await api.getSubscriptions();
+            // Filter out communities the user owns
+            const filteredSubs = subscribedSubs.filter(sub => !ownedSubIds.has(sub.id));
+
+            if (filteredSubs.length === 0) {
+                subscribedContainer.innerHTML = '<div class="empty-state"><p>You haven\'t joined any other communities yet.</p><a href="/">Browse communities</a></div>';
+            } else {
+                subscribedContainer.innerHTML = filteredSubs.map(sub => renderCommunityCard(sub, false)).join('');
+                // Add leave button handlers
+                subscribedContainer.querySelectorAll('.leave-btn').forEach(btn => {
+                    btn.addEventListener('click', handleLeaveCommunity);
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load subscribed communities:', error);
+            subscribedContainer.innerHTML = '<div class="empty-state"><p>Failed to load communities.</p></div>';
+        }
+    }
+}
+
+// Render community card
+function renderCommunityCard(sub, isOwner) {
+    const iconHtml = sub.iconUrl
+        ? `<img src="${sub.iconUrl}" alt="${sub.name}">`
+        : sub.name.charAt(0).toUpperCase();
+
+    return `
+        <a href="/n/${sub.name}" class="community-card">
+            <div class="community-icon">${iconHtml}</div>
+            <div class="community-info">
+                <div class="community-name">
+                    n/${escapeHtml(sub.name)}
+                    ${isOwner ? '<span class="owner-badge">Owner</span>' : ''}
+                </div>
+                <div class="community-meta">${sub.subscriberCount} members</div>
+            </div>
+            ${!isOwner ? `
+                <div class="community-actions">
+                    <button class="leave-btn" data-sub-id="${sub.id}" onclick="event.preventDefault(); event.stopPropagation();">Leave</button>
+                </div>
+            ` : ''}
+        </a>
+    `;
+}
+
+// Handle leave community
+async function handleLeaveCommunity(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const btn = e.currentTarget;
+    const subId = btn.dataset.subId;
+
+    if (!confirm('Are you sure you want to leave this community?')) {
+        return;
+    }
+
+    try {
+        await api.unsubscribe(subId);
+        const card = btn.closest('.community-card');
+        if (card) {
+            card.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => {
+                card.remove();
+                // Check if list is now empty
+                const container = document.getElementById('subscribed-communities');
+                if (container && container.children.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><p>You haven\'t joined any communities yet.</p><a href="/">Browse communities</a></div>';
+                }
+            }, 300);
+        }
+        showNotification('Left community successfully');
+    } catch (error) {
+        showNotification('Failed to leave community', 'error');
     }
 }
 
@@ -203,7 +443,7 @@ function renderPosts(posts, container) {
 function renderPost(post, rank) {
     const thumbnailHtml = getThumbnailHtml(post);
     const flairHtml = post.flair ? `<span class="post-flair ${post.flair.toLowerCase()}">${post.flair}</span>` : '';
-    const subName = post.subName || post.subName; // support both for compatibility
+    const subName = post.subName || '';
     const isImagePost = post.postType === 'IMAGE' || (post.imageUrls && post.imageUrls.length > 0);
     const domainHtml = post.url ? `<span class="post-domain">(${getDomain(post.url)})</span>` : (post.postType === 'TEXT' || isImagePost) ? `<span class="post-domain">(self.${subName})</span>` : '';
     const postLink = (post.postType === 'LINK' && post.url) ? post.url : `/n/${subName}/comments/${post.id}`;
@@ -279,24 +519,32 @@ async function handleVote(e) {
     }
 
     const btn = e.currentTarget;
+
+    // Prevent double-clicks
+    if (btn.disabled) return;
+
     const targetId = btn.dataset.target;
     const targetType = btn.dataset.type;
     const voteType = btn.dataset.vote;
 
+    const container = btn.closest('.vote-buttons') || btn.closest('.comment');
+    const upBtn = container.querySelector('.upvote');
+    const downBtn = container.querySelector('.downvote');
+
+    // Disable both buttons during request
+    upBtn.disabled = true;
+    downBtn.disabled = true;
+
     try {
         const result = await api.vote(targetId, targetType, voteType);
 
-        // Update UI
-        const container = btn.closest('.vote-buttons') || btn.closest('.comment');
+        // Update vote count
         const voteCountEl = container.querySelector('.vote-count');
         if (voteCountEl) {
             voteCountEl.textContent = formatVoteCount(result.voteCount);
         }
 
         // Update button states
-        const upBtn = container.querySelector('.upvote');
-        const downBtn = container.querySelector('.downvote');
-
         if (voteType === 'UPVOTE') {
             if (upBtn.classList.contains('active')) {
                 upBtn.classList.remove('active');
@@ -313,7 +561,11 @@ async function handleVote(e) {
             }
         }
     } catch (error) {
-        console.error('Vote failed:', error);
+        showNotification('Vote failed', 'error');
+    } finally {
+        // Re-enable buttons
+        upBtn.disabled = false;
+        downBtn.disabled = false;
     }
 }
 
@@ -387,7 +639,7 @@ async function loadPost(postId, subName) {
     try {
         // Load post
         const post = await api.getPost(postId);
-        document.getElementById('page-title').textContent = `${post.title} : ${post.subName || post.subName}`;
+        document.getElementById('page-title').textContent = `${post.title} : ${post.subName}`;
 
         const upvoteClass = post.userVote === 1 ? 'active' : '';
         const downvoteClass = post.userVote === -1 ? 'active' : '';
@@ -403,7 +655,7 @@ async function loadPost(postId, subName) {
                     <div class="post-title">${escapeHtml(post.title)}</div>
                     <div class="post-meta">
                         submitted ${post.timeAgo} by <a href="/u/${post.authorUsername}">${post.authorUsername}</a>
-                        to <a href="/n/${post.subName || post.subName}">n/${post.subName || post.subName}</a>
+                        to <a href="/n/${post.subName}">n/${post.subName}</a>
                     </div>
                     ${post.imageUrls && post.imageUrls.length > 0 ? `
                         <div class="post-images" style="margin: 15px 0;">
@@ -412,7 +664,7 @@ async function loadPost(postId, subName) {
                             `).join('')}
                         </div>
                     ` : ''}
-                    ${post.content ? `<div class="post-content-text">${escapeHtml(post.content)}</div>` : ''}
+                    ${post.content ? `<div class="post-content-text markdown-content">${parseMarkdown(post.content)}</div>` : ''}
                     ${post.url ? `<div class="post-content-text"><a href="${post.url}" target="_blank">${post.url}</a></div>` : ''}
                     <div class="post-actions" style="margin-top: 10px;">
                         <span class="post-comments">${post.commentCount} comments</span>
@@ -510,7 +762,7 @@ function renderComment(comment) {
                 <span class="vote-count">${comment.voteCount} points</span>
                 <span>${comment.timeAgo}</span>
             </div>
-            <div class="comment-body">${escapeHtml(comment.content)}</div>
+            <div class="comment-body markdown-content">${parseMarkdown(comment.content)}</div>
             <div class="comment-actions">
                 <a href="#" class="reply-btn" data-comment-id="${comment.id}" data-post-id="${comment.postId}">reply</a>
                 <a href="#" onclick="shareComment('${comment.id}', '${comment.postId}'); return false;">share</a>
@@ -610,7 +862,7 @@ async function loadUserProfile(username) {
                 `).join('');
             }
         } catch (e) {
-            console.log('Could not load moderated subs');
+            // Silently fail - moderated subs are optional
         }
     } catch (error) {
         document.getElementById('profile-username').textContent = 'User not found';

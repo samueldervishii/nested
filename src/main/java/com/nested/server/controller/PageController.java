@@ -77,6 +77,11 @@ public class PageController {
         return "reset-password";
     }
 
+    @GetMapping("/my-communities")
+    public String myCommunities() {
+        return "my-communities";
+    }
+
     @GetMapping("/c/popular")
     public String popular() {
         return "index";

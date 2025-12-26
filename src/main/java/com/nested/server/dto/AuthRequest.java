@@ -15,4 +15,7 @@ public class AuthRequest {
 
     @NotBlank(message = "Password is required")
     private String password;
+
+    // Optional: 2FA code for accounts with 2FA enabled
+    private String twoFactorCode;
 }

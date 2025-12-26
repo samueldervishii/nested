@@ -58,4 +58,9 @@ public class User {
     @Indexed(sparse = true)  // Sparse index: only indexes documents where the field exists
     private String resetToken;
     private Instant resetTokenExpiry;
+
+    // Two-Factor Authentication
+    @Builder.Default
+    private boolean twoFactorEnabled = false;
+    private String twoFactorSecret;  // Encrypted TOTP secret
 }

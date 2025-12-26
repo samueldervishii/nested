@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Communities - Nested</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/images/nested-icon.svg">
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('.logo img').forEach(function(logo) {
+                    logo.src = theme === 'dark' ? '/images/nested-logo-dark.svg' : '/images/nested-logo.svg';
+                });
+            });
+        })();
+    </script>
+    <style>
+        .communities-page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .communities-section {
+            margin-bottom: 30px;
+        }
+        .communities-section h2 {
+            font-size: 16px;
+            color: var(--text-primary, #1a1a1b);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color, #edeff1);
+        }
+        .community-list {
+            display: grid;
+            gap: 12px;
+        }
+        .community-card {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--bg-secondary, #fff);
+            border: 1px solid var(--border-color, #ccc);
+            border-radius: 4px;
+            text-decoration: none;
+            color: var(--text-primary, #1a1a1b);
+            transition: border-color 0.2s;
+        }
+        .community-card:hover {
+            border-color: var(--border-light, #898989);
+        }
+        .community-card:visited {
+            color: var(--text-primary, #1a1a1b);
+        }
+        .community-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #0079d3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .community-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .community-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .community-name {
+            font-weight: 500;
+            color: var(--text-primary, #1a1a1b);
+            font-size: 14px;
+        }
+        .community-meta {
+            font-size: 12px;
+            color: var(--text-muted, #7c7c7c);
+            margin-top: 2px;
+        }
+        .community-actions {
+            margin-left: 10px;
+        }
+        .leave-btn {
+            padding: 6px 12px;
+            border: 1px solid #0079d3;
+            background: transparent;
+            color: #0079d3;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .leave-btn:hover {
+            background: #0079d3;
+            color: #fff;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted, #7c7c7c);
+        }
+        .empty-state p {
+            margin-bottom: 15px;
+        }
+        .empty-state a {
+            color: #0079d3;
+            text-decoration: none;
+        }
+        .empty-state a:hover {
+            text-decoration: underline;
+        }
+        .owner-badge {
+            background: #ff4500;
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-left: 8px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Top Bar -->
+    <div class="header-top">
+        <a href="/my-communities" class="active">MY COMMUNITIES</a>
+        <a href="/">HOME</a>
+        <a href="/c/popular">POPULAR</a>
+        <a href="/c/all">ALL</a>
+    </div>
+
+    <!-- Main Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <img src="/images/nested-logo.svg" alt="nested">
+            </a>
+
+            <div class="header-right">
+                <div id="auth-area"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="communities-page">
+        <div class="communities-section" id="owned-section">
+            <h2>Communities You Created</h2>
+            <div class="community-list" id="owned-communities">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+
+        <div class="communities-section" id="subscribed-section">
+            <h2>Communities You Joined</h2>
+            <div class="community-list" id="subscribed-communities">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
