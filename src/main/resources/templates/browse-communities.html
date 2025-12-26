@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Communities - Nested</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/images/nested-icon.svg">
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelectorAll('.logo img').forEach(function(logo) {
+                    logo.src = theme === 'dark' ? '/images/nested-logo-dark.svg' : '/images/nested-logo.svg';
+                });
+            });
+        })();
+    </script>
+    <style>
+        .communities-page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .communities-section {
+            margin-bottom: 30px;
+        }
+        .communities-section h2 {
+            font-size: 16px;
+            color: var(--text-primary, #1a1a1b);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color, #edeff1);
+        }
+        .community-list {
+            display: grid;
+            gap: 12px;
+        }
+        .community-card {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--bg-secondary, #fff);
+            border: 1px solid var(--border-color, #ccc);
+            border-radius: 4px;
+            text-decoration: none;
+            color: var(--text-primary, #1a1a1b);
+            transition: border-color 0.2s;
+        }
+        .community-card:hover {
+            border-color: var(--border-light, #898989);
+        }
+        .community-card:visited {
+            color: var(--text-primary, #1a1a1b);
+        }
+        .community-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #0079d3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .community-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .community-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .community-name {
+            font-weight: 500;
+            color: var(--text-primary, #1a1a1b);
+            font-size: 14px;
+        }
+        .community-meta {
+            font-size: 12px;
+            color: var(--text-muted, #7c7c7c);
+            margin-top: 2px;
+        }
+        .community-description {
+            font-size: 12px;
+            color: var(--text-secondary, #5a5a5a);
+            margin-top: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .community-actions {
+            margin-left: 10px;
+        }
+        .join-btn {
+            padding: 6px 16px;
+            border: none;
+            background: #0079d3;
+            color: #fff;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .join-btn:hover {
+            background: #005fa3;
+        }
+        .join-btn.joined {
+            background: transparent;
+            border: 1px solid #0079d3;
+            color: #0079d3;
+        }
+        .join-btn.joined:hover {
+            background: #0079d3;
+            color: #fff;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted, #7c7c7c);
+        }
+        .empty-state p {
+            margin-bottom: 15px;
+        }
+        .empty-state a {
+            color: #0079d3;
+            text-decoration: none;
+        }
+        .empty-state a:hover {
+            text-decoration: underline;
+        }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .page-header h1 {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--text-primary, #1a1a1b);
+        }
+        .create-community-btn {
+            padding: 8px 16px;
+            background: #0079d3;
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .create-community-btn:hover {
+            background: #005fa3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Top Bar -->
+    <div class="header-top">
+        <a href="/my-communities">MY COMMUNITIES</a>
+        <a href="/">HOME</a>
+        <a href="/browse-communities">BROWSE COMMUNITIES</a>
+    </div>
+
+    <!-- Main Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <img src="/images/nested-logo.svg" alt="nested">
+            </a>
+
+            <div class="header-right">
+                <div id="auth-area"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="communities-page">
+        <div class="page-header">
+            <h1>Browse Communities</h1>
+            <a href="/sub/create" class="create-community-btn">Create Community</a>
+        </div>
+
+        <div class="communities-section">
+            <h2>Discover New Communities</h2>
+            <div class="community-list" id="browse-communities">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            currentUser = await api.getCurrentUser();
+            updateAuthArea();
+            await loadBrowseCommunities();
+        });
+
+        async function loadBrowseCommunities() {
+            const container = document.getElementById('browse-communities');
+
+            try {
+                const communities = await api.getBrowsableCommunities();
+
+                if (!communities || communities.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <p>No communities to discover yet.</p>
+                            <p>You've joined all available communities or there are no communities created yet.</p>
+                            <a href="/sub/create">Create a new community</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = communities.map(community => renderCommunityCard(community)).join('');
+
+                // Add event listeners for join buttons
+                container.querySelectorAll('.join-btn').forEach(btn => {
+                    btn.addEventListener('click', handleJoinCommunity);
+                });
+
+            } catch (error) {
+                console.error('Error loading communities:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>Error loading communities. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderCommunityCard(community) {
+            const icon = community.iconUrl
+                ? `<img src="${community.iconUrl}" alt="${community.name}">`
+                : community.name.charAt(0).toUpperCase();
+
+            const description = community.description
+                ? `<div class="community-description">${community.description}</div>`
+                : '';
+
+            return `
+                <div class="community-card">
+                    <a href="/n/${community.name}" class="community-icon">${icon}</a>
+                    <div class="community-info">
+                        <a href="/n/${community.name}" class="community-name">n/${community.name}</a>
+                        <div class="community-meta">${community.subscriberCount} members</div>
+                        ${description}
+                    </div>
+                    <div class="community-actions">
+                        <button class="join-btn" data-sub-id="${community.id}" data-sub-name="${community.name}">Join</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function handleJoinCommunity(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (!currentUser || !currentUser.authenticated) {
+                window.location.href = '/login';
+                return;
+            }
+
+            const btn = e.target;
+            const subId = btn.dataset.subId;
+            const subName = btn.dataset.subName;
+
+            try {
+                await api.subscribe(subId);
+                btn.textContent = 'Joined';
+                btn.classList.add('joined');
+                btn.disabled = true;
+
+                // Optionally remove the card after a short delay
+                setTimeout(() => {
+                    const card = btn.closest('.community-card');
+                    if (card) {
+                        card.style.opacity = '0.5';
+                    }
+                }, 500);
+
+            } catch (error) {
+                console.error('Error joining community:', error);
+                alert('Failed to join community. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>

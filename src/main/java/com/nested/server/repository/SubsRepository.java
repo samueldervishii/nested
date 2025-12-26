@@ -61,4 +61,15 @@ public interface SubsRepository extends MongoRepository<Subs, String> {
     @Query("{ '_id': ?0 }")
     @Update("{ '$pull': { 'moderatorIds': ?1 } }")
     void removeModerator(String subsId, String userId);
+
+    /**
+     * Find communities where user is NOT a subscriber, moderator, or creator
+     */
+    @Query("{ 'subscriberIds': { '$ne': ?0 }, 'moderatorIds': { '$ne': ?0 }, 'creatorId': { '$ne': ?0 } }")
+    List<Subs> findCommunitiesUserNotPartOf(String userId);
+
+    /**
+     * Find all communities ordered by subscriber count
+     */
+    List<Subs> findAllByOrderBySubscriberCountDesc();
 }

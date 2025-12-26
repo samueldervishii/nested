@@ -284,6 +284,10 @@ const api = {
         return this.request(`/subs/search?q=${encodeURIComponent(query)}`);
     },
 
+    async searchUsers(query) {
+        return this.request(`/users/search?q=${encodeURIComponent(query)}`);
+    },
+
     // User moderated/created subs
     async getModeratedSubs(username) {
         return this.request(`/users/${username}/moderated-subs`);
@@ -296,6 +300,11 @@ const api = {
     // Get user's subscribed communities
     async getSubscriptions() {
         return this.request('/subs/subscriptions');
+    },
+
+    // Get browsable communities (communities user is NOT part of)
+    async getBrowsableCommunities() {
+        return this.request('/subs/browse');
     },
 
     // Two-Factor Authentication

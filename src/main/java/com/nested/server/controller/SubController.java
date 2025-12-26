@@ -113,6 +113,16 @@ public class SubController {
         return ResponseEntity.ok(subService.getUserSubscriptions(user));
     }
 
+    @GetMapping("/browse")
+    public ResponseEntity<List<SubResponse>> getBrowsableCommunities(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User user = userDetails != null ?
+                userService.findByUsername(userDetails.getUsername()).orElse(null) : null;
+
+        return ResponseEntity.ok(subService.getBrowsableCommunities(user));
+    }
+
     @PostMapping("/{id}/subscribe")
     public ResponseEntity<Void> subscribe(
             @PathVariable String id,

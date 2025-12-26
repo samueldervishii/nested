@@ -82,6 +82,11 @@ public class PageController {
         return "my-communities";
     }
 
+    @GetMapping("/browse-communities")
+    public String browseCommunities() {
+        return "browse-communities";
+    }
+
     @GetMapping("/c/popular")
     public String popular() {
         return "index";

@@ -44,6 +44,38 @@ function updateLogo(theme) {
 }
 
 // ============================================
+// Scroll to Top Button
+// ============================================
+function initScrollToTop() {
+    // Check if button already exists
+    let btn = document.getElementById('scroll-top-btn');
+
+    // Create button if it doesn't exist
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'scroll-top-btn';
+        btn.className = 'scroll-top-btn';
+        btn.title = 'Scroll to top';
+        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>';
+        document.body.appendChild(btn);
+    }
+
+    // Show/hide button based on scroll position
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            btn.classList.add('visible');
+        } else {
+            btn.classList.remove('visible');
+        }
+    });
+
+    // Scroll to top on click
+    btn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
+
+// ============================================
 // Markdown Parser (Simple Implementation)
 // ============================================
 function parseMarkdown(text) {
@@ -127,6 +159,9 @@ function setLoading(element, loading) {
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize theme first (prevents flash)
     initTheme();
+
+    // Initialize scroll to top button
+    initScrollToTop();
 
     // Load current user
     currentUser = await api.getCurrentUser();

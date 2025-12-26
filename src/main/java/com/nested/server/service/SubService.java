@@ -259,4 +259,23 @@ public class SubService {
         subsRepository.save(sub);
         return count;
     }
+
+    /**
+     * Get communities that the user is NOT part of (not subscribed, not moderator, not creator)
+     */
+    public List<SubResponse> getBrowsableCommunities(User currentUser) {
+        List<Subs> subsList;
+
+        if (currentUser == null) {
+            // For anonymous users, show all communities
+            subsList = subsRepository.findAllByOrderBySubscriberCountDesc();
+        } else {
+            // For logged-in users, show communities they're not part of
+            subsList = subsRepository.findCommunitiesUserNotPartOf(currentUser.getId());
+        }
+
+        return subsList.stream()
+                .map(sub -> mapToResponse(sub, false, currentUser))
+                .collect(Collectors.toList());
+    }
 }

@@ -182,4 +182,23 @@ public class UserService implements UserDetailsService {
             return true;
         }
     }
+
+    /**
+     * Search users by username
+     */
+    public List<Map<String, Object>> searchUsers(String query) {
+        if (query == null || query.trim().length() < 2) {
+            return List.of();
+        }
+
+        List<User> users = userRepository.findByUsernameContainingIgnoreCase(query.trim());
+        return users.stream()
+                .map(user -> Map.<String, Object>of(
+                        "id", user.getId(),
+                        "username", user.getUsername(),
+                        "avatarUrl", user.getAvatarUrl() != null ? user.getAvatarUrl() : "",
+                        "karma", user.getKarma()
+                ))
+                .toList();
+    }
 }

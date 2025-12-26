@@ -17,14 +17,154 @@
             });
         })();
     </script>
+    <style>
+        .search-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color, #edeff1);
+        }
+        .search-tab {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted, #7c7c7c);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .search-tab:hover {
+            color: var(--text-primary, #1a1a1b);
+        }
+        .search-tab.active {
+            color: #0079d3;
+            border-bottom-color: #0079d3;
+        }
+        .search-results {
+            min-height: 200px;
+        }
+        .result-section {
+            display: none;
+        }
+        .result-section.active {
+            display: block;
+        }
+        .user-card {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--bg-secondary, #fff);
+            border: 1px solid var(--border-color, #ccc);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: var(--text-primary, #1a1a1b);
+            transition: border-color 0.2s;
+        }
+        .user-card:hover {
+            border-color: var(--border-light, #898989);
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #0079d3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .user-info {
+            flex: 1;
+        }
+        .user-name {
+            font-weight: 500;
+            color: var(--text-primary, #1a1a1b);
+            font-size: 14px;
+        }
+        .user-karma {
+            font-size: 12px;
+            color: var(--text-muted, #7c7c7c);
+            margin-top: 2px;
+        }
+        .community-card {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--bg-secondary, #fff);
+            border: 1px solid var(--border-color, #ccc);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: var(--text-primary, #1a1a1b);
+            transition: border-color 0.2s;
+        }
+        .community-card:hover {
+            border-color: var(--border-light, #898989);
+        }
+        .community-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #0079d3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .community-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .community-info {
+            flex: 1;
+        }
+        .community-name {
+            font-weight: 500;
+            color: var(--text-primary, #1a1a1b);
+            font-size: 14px;
+        }
+        .community-meta {
+            font-size: 12px;
+            color: var(--text-muted, #7c7c7c);
+            margin-top: 2px;
+        }
+        .empty-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted, #7c7c7c);
+        }
+        .result-count {
+            font-size: 12px;
+            color: var(--text-muted, #7c7c7c);
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 <body>
     <!-- Header Top Bar -->
     <div class="header-top">
         <a href="/my-communities">MY COMMUNITIES</a>
         <a href="/">HOME</a>
-        <a href="/c/popular">POPULAR</a>
-        <a href="/c/all">ALL</a>
+        <a href="/browse-communities">BROWSE COMMUNITIES</a>
     </div>
 
     <!-- Main Header -->
@@ -33,14 +173,6 @@
             <a href="/" class="logo">
                 <img src="/images/nested-logo.svg" alt="nested">
             </a>
-
-            <nav class="nav-tabs" id="sort-tabs">
-                <a href="?sort=hot" class="nav-tab active" data-sort="hot">hot</a>
-                <a href="?sort=new" class="nav-tab" data-sort="new">new</a>
-                <a href="?sort=rising" class="nav-tab" data-sort="rising">rising</a>
-                <a href="?sort=controversial" class="nav-tab" data-sort="controversial">controversial</a>
-                <a href="?sort=top" class="nav-tab" data-sort="top">top</a>
-            </nav>
 
             <div class="header-right">
                 <div id="auth-area"></div>
@@ -51,9 +183,35 @@
     <!-- Main Content -->
     <div class="container">
         <main class="content">
-            <h2 style="color: #222; margin-bottom: 15px;">Search Results</h2>
-            <div class="post-list" id="post-list">
-                <div class="loading">Enter a search query...</div>
+            <h2 style="color: var(--text-primary, #222); margin-bottom: 15px;">Search Results</h2>
+
+            <!-- Search Tabs -->
+            <div class="search-tabs">
+                <button class="search-tab active" data-tab="posts">Posts</button>
+                <button class="search-tab" data-tab="communities">Communities</button>
+                <button class="search-tab" data-tab="users">Users</button>
+            </div>
+
+            <!-- Search Results -->
+            <div class="search-results">
+                <div class="result-section active" id="posts-results">
+                    <div class="result-count" id="posts-count"></div>
+                    <div class="post-list" id="post-list">
+                        <div class="loading">Enter a search query...</div>
+                    </div>
+                </div>
+                <div class="result-section" id="communities-results">
+                    <div class="result-count" id="communities-count"></div>
+                    <div id="community-list">
+                        <div class="loading">Enter a search query...</div>
+                    </div>
+                </div>
+                <div class="result-section" id="users-results">
+                    <div class="result-count" id="users-count"></div>
+                    <div id="user-list">
+                        <div class="loading">Enter a search query...</div>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -74,13 +232,166 @@
                     <span class="about-title">search</span>
                 </div>
                 <p class="about-text">
-                    Search for posts across all communities.
+                    Search for posts, communities, and users across nested.
                 </p>
             </div>
         </aside>
     </div>
 
+    <!-- Scroll to Top Button -->
+    <button id="scroll-top-btn" class="scroll-top-btn" title="Scroll to top">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 15l-6-6-6 6"/>
+        </svg>
+    </button>
+
     <script src="/js/api.js"></script>
     <script src="/js/app.js"></script>
+    <script>
+        let searchQuery = '';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            currentUser = await api.getCurrentUser();
+            updateAuthArea();
+
+            // Get search query from URL
+            const params = new URLSearchParams(window.location.search);
+            searchQuery = params.get('q') || '';
+
+            if (searchQuery) {
+                document.getElementById('search-input').value = searchQuery;
+                await performSearch(searchQuery);
+            }
+
+            // Setup tab switching
+            document.querySelectorAll('.search-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.result-section').forEach(s => s.classList.remove('active'));
+
+                    tab.classList.add('active');
+                    document.getElementById(`${tab.dataset.tab}-results`).classList.add('active');
+                });
+            });
+
+            // Setup scroll to top button
+            setupScrollToTop();
+        });
+
+        async function performSearch(query) {
+            // Search all three types in parallel
+            const [posts, communities, users] = await Promise.all([
+                api.searchPosts(query).catch(() => []),
+                api.searchSub(query).catch(() => []),
+                api.searchUsers(query).catch(() => [])
+            ]);
+
+            // Render posts
+            renderPosts(posts);
+
+            // Render communities
+            renderCommunities(communities);
+
+            // Render users
+            renderUsers(users);
+
+            // Update counts in tabs
+            updateTabCounts(posts.length, communities.length, users.length);
+        }
+
+        function renderPosts(posts) {
+            const container = document.getElementById('post-list');
+            const countEl = document.getElementById('posts-count');
+
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<div class="empty-results">No posts found</div>';
+                countEl.textContent = '';
+                return;
+            }
+
+            countEl.textContent = `${posts.length} result${posts.length !== 1 ? 's' : ''}`;
+            container.innerHTML = posts.map(post => renderPost(post)).join('');
+            attachVoteListeners();
+        }
+
+        function renderCommunities(communities) {
+            const container = document.getElementById('community-list');
+            const countEl = document.getElementById('communities-count');
+
+            if (!communities || communities.length === 0) {
+                container.innerHTML = '<div class="empty-results">No communities found</div>';
+                countEl.textContent = '';
+                return;
+            }
+
+            countEl.textContent = `${communities.length} result${communities.length !== 1 ? 's' : ''}`;
+            container.innerHTML = communities.map(community => {
+                const icon = community.iconUrl
+                    ? `<img src="${community.iconUrl}" alt="${community.name}">`
+                    : community.name.charAt(0).toUpperCase();
+
+                return `
+                    <a href="/n/${community.name}" class="community-card">
+                        <div class="community-icon">${icon}</div>
+                        <div class="community-info">
+                            <div class="community-name">n/${community.name}</div>
+                            <div class="community-meta">${community.subscriberCount} members</div>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        function renderUsers(users) {
+            const container = document.getElementById('user-list');
+            const countEl = document.getElementById('users-count');
+
+            if (!users || users.length === 0) {
+                container.innerHTML = '<div class="empty-results">No users found</div>';
+                countEl.textContent = '';
+                return;
+            }
+
+            countEl.textContent = `${users.length} result${users.length !== 1 ? 's' : ''}`;
+            container.innerHTML = users.map(user => {
+                const avatar = user.avatarUrl
+                    ? `<img src="${user.avatarUrl}" alt="${user.username}">`
+                    : user.username.charAt(0).toUpperCase();
+
+                return `
+                    <a href="/u/${user.username}" class="user-card">
+                        <div class="user-avatar">${avatar}</div>
+                        <div class="user-info">
+                            <div class="user-name">u/${user.username}</div>
+                            <div class="user-karma">${user.karma} karma</div>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        function updateTabCounts(posts, communities, users) {
+            const tabs = document.querySelectorAll('.search-tab');
+            tabs[0].textContent = `Posts (${posts})`;
+            tabs[1].textContent = `Communities (${communities})`;
+            tabs[2].textContent = `Users (${users})`;
+        }
+
+        function setupScrollToTop() {
+            const btn = document.getElementById('scroll-top-btn');
+
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 300) {
+                    btn.classList.add('visible');
+                } else {
+                    btn.classList.remove('visible');
+                }
+            });
+
+            btn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    </script>
 </body>
 </html>

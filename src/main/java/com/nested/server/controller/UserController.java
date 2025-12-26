@@ -124,4 +124,9 @@ public class UserController {
                 .map(user -> ResponseEntity.ok(subService.getCreatedSubs(user.getId())))
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Map<String, Object>>> searchUsers(@RequestParam String q) {
+        return ResponseEntity.ok(userService.searchUsers(q));
+    }
 }

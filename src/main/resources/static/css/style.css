@@ -348,10 +348,10 @@
     color: #b0b3b8 !important;
 }
 
-[data-theme="dark"] .form-container {
-    background: #272729 !important;
-    border-color: #343536 !important;
-}
+/*[data-theme="dark"] .form-container {*/
+/*    background: #272729 !important;*/
+/*    border-color: #343536 !important;*/
+/*}*/
 
 [data-theme="dark"] .form-container h2 {
     color: #d7dadc !important;
@@ -1069,7 +1069,7 @@ a:visited {
 
 .post-detail .post-content-text {
     padding: 15px;
-    background: #f8f9fa;
+    background: var(--bg-primary);
     border-radius: 4px;
     margin-top: 12px;
     line-height: 1.6;
@@ -1541,4 +1541,56 @@ a:visited {
 .markdown-content th {
     background: var(--bg-tertiary);
     font-weight: bold;
+}
+
+/* ============================================
+   Scroll to Top Button
+   ============================================ */
+.scroll-top-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--link-color, #0079d3);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+.scroll-top-btn:hover {
+    background: var(--accent-color, #ff6b35);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.scroll-top-btn.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.scroll-top-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .scroll-top-btn {
+    background: #4fbcff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .scroll-top-btn:hover {
+    background: var(--accent-color);
 }
