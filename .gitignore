@@ -38,6 +38,7 @@ out/
 gradle/wrapper/gradle-wrapper.jar
 gradle/wrapper/gradle-wrapper.properties
 src/main/resources/application.properties
-src/main/resources/application.properties
-uploads/posts/temp_1766578096980_ab9d34d1.png
-uploads/avatars/694a8ae1d6e2f93a044c484c_076bf3f0.jpg
+
+### Uploads ###
+uploads/
+.claude/
