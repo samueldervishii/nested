@@ -132,7 +132,7 @@ public class SubController {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", userDetails.getUsername()));
 
         subService.subscribe(id, user);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/unsubscribe")
@@ -144,7 +144,7 @@ public class SubController {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", userDetails.getUsername()));
 
         subService.unsubscribe(id, user);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
